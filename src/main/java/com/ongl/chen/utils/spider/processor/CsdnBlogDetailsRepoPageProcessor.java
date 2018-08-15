@@ -65,7 +65,10 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 			System.out.println("11111");
 		} else if ((page.getUrl()).regex(URL_DETAIL).match()){
 			System.out.println("2222222");
-			page.getHtml().$(".article-info-box");
+			
+			String CreateTime = page.getHtml().$(".article-info-box").xpath("//span[@class='time']/text()").toString();
+			String readCounts = page.getHtml().$(".article-info-box").xpath("//span[@class='read-count']/text()").toString();
+			
 		}
 		System.out.println("333333");
 //		page.getHtml().xpath(xpath)
