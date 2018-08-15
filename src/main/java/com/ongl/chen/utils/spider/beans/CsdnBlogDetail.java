@@ -28,6 +28,10 @@ public class CsdnBlogDetail {
 	
 	String id;
 
+	String readCount;
+
+	String creatTime;
+
 	public String getTitle() {
 		return title;
 	}
@@ -68,12 +72,35 @@ public class CsdnBlogDetail {
 		this.id = id;
 	}
 
+
+	public String getReadCount() {
+		return readCount;
+	}
+
+	public void setReadCount(String readCount) {
+		this.readCount = readCount;
+	}
+
+	public String getCreatTime() {
+		return creatTime;
+	}
+
+	public void setCreatTime(String creatTime) {
+		this.creatTime = creatTime;
+	}
+
 	@Override
 	public String toString() {
-		return "CsdnBlogDetail [title=" + title + ", pref=" + pref + ", url=" + url + ", context=" + context + ", id="
-				+ id + "]";
+		return "CsdnBlogDetail{" +
+				"title='" + title + '\'' +
+				", pref='" + pref + '\'' +
+				", url='" + url + '\'' +
+				", context='" + context + '\'' +
+				", id='" + id + '\'' +
+				", readCount='" + readCount + '\'' +
+				", creatTime='" + creatTime + '\'' +
+				'}';
 	}
-	
-	
+
 
 }
