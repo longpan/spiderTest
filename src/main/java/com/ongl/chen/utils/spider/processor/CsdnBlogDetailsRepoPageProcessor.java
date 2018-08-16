@@ -84,9 +84,10 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 			String createTime = page.getHtml().$(".article-info-box").xpath("//span[@class='time']/text()").toString();
 			String readCounts = page.getHtml().$(".article-info-box").xpath("//span[@class='read-count']/text()").toString();
 			//article_content
-			String content = page.getHtml().$("#article_content").toString();
+			String content = page.getHtml().$("#article_content").xpath("/allText()").toString();
 			blogDetail.setReadCount(readCounts);
 			blogDetail.setCreatTime(createTime);
+//			blogDetail.setContext(content);
 
 			System.out.println(blogDetail.toString());
 			
