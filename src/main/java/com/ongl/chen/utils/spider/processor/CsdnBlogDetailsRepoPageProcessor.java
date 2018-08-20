@@ -15,6 +15,7 @@ import java.util.List;
 
 import com.ongl.chen.utils.spider.beans.CsdnBlogDetail;
 
+import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
@@ -29,7 +30,7 @@ import us.codecraft.webmagic.selector.Selectable;
 * @date 2018年8月15日
 *
 */
-
+@Component
 public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 
 	private Site site = Site
@@ -137,6 +138,10 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
     }
 
     public static void main(String[] args) {
-        Spider.create(new CsdnBlogDetailsRepoPageProcessor()).addUrl("https://blog.csdn.net").thread(1).run();
-    }
+//		new start();
+	}
+
+	public  void start() {
+		Spider.create(new CsdnBlogDetailsRepoPageProcessor()).addUrl("https://blog.csdn.net").thread(1).run();
+	}
 }
