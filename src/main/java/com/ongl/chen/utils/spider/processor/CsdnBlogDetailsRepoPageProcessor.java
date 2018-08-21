@@ -15,6 +15,8 @@ import java.util.List;
 
 import com.ongl.chen.utils.spider.beans.CsdnBlogDetail;
 
+import com.ongl.chen.utils.spider.pipline.CsdnBlogDetailPipline;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
@@ -47,6 +49,9 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 	public static final String URL_INDEX = "https://blog.csdn.net";
 
 	public HashMap<String, CsdnBlogDetail> blogMap = new HashMap<String, CsdnBlogDetail>();
+
+	@Autowired
+	CsdnBlogDetailPipline csdnBlogDetailPipline;
 	
 	
 	public void process(Page page) {
@@ -90,6 +95,8 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 			blogDetail.setCreatTime(createTime);
 //			blogDetail.setContext(content);
 
+			page.putField("blog", blogDetail);
+
 			System.out.println(blogDetail.toString());
 			
 		}else if (page.getUrl().toString().equals(URL_INDEX)) {
@@ -107,7 +114,7 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 				String id = getIdByUrl(url);
 				detail.setTitle(title);
 				detail.setUrl(url);
-				detail.setId(id);
+				detail.setBlogId(id);
 				blogMap.put(id,detail);
 
 				page.addTargetRequest(url);
@@ -142,6 +149,7 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 	}
 
 	public  void start() {
-		Spider.create(new CsdnBlogDetailsRepoPageProcessor()).addUrl("https://blog.csdn.net").thread(1).run();
+		Spider.create(new CsdnBlogDetailsRepoPageProcessor()).addUrl("https://blog.csdn.net").addPipeline(csdnBlogDetailPipline).thread(1).run();
+
 	}
 }

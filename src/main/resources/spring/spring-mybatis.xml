@@ -19,7 +19,6 @@ http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
         <property name="mapperLocations" value="classpath:mybatis/*/*.xml"/>
         <property name="configLocation" value="classpath:mybatis/mybatis-config.xml"/>
         <property name="typeAliasesPackage" value="com.ongl.chen.utils.spider.beans"/>
-        <property name="typeEnumsPackage" value="com.ongl.chen.utils.spider.beans.enums"/>
         <property name="plugins">
             <array>
                 <!-- 分页插件配置 -->
@@ -54,9 +53,7 @@ http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
 	    <!-- <property name="dbType" value="oracle" /> -->
 	    <!-- 全局表为下划线命名设置 true -->
 	    <!-- <property name="dbColumnUnderline" value="true" /> -->
-        <property name="metaObjectHandler">
-            <bean class="com.baomidou.springmvc.common.MyMetaObjectHandler" />
-        </property>
+
 	</bean>
 
 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">

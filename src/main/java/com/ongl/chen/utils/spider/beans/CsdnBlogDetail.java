@@ -8,6 +8,9 @@
 */
 package com.ongl.chen.utils.spider.beans;
 
+import com.baomidou.mybatisplus.annotations.TableName;
+import com.ongl.chen.utils.spider.common.SuperEntity;
+
 /**
 * @ClassName: CsdnBlogDetail
 * @Description: TODO(这里用一句话描述这个类的作用)
@@ -15,8 +18,9 @@ package com.ongl.chen.utils.spider.beans;
 * @date 2018年8月15日
 *
 */
-
-public class CsdnBlogDetail {
+@TableName("csdn_blog")
+public class CsdnBlogDetail extends SuperEntity
+{
 	
 	String title;
 	
@@ -26,7 +30,7 @@ public class CsdnBlogDetail {
 	
 	String context;
 	
-	String id;
+	String blogId;
 
 	String readCount;
 
@@ -64,14 +68,14 @@ public class CsdnBlogDetail {
 		this.context = context;
 	}
 
-	public String getId() {
-		return id;
+
+	public String getBlogId() {
+		return blogId;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setBlogId(String blogId) {
+		this.blogId = blogId;
 	}
-
 
 	public String getReadCount() {
 		return readCount;
@@ -96,7 +100,7 @@ public class CsdnBlogDetail {
 				", pref='" + pref + '\'' +
 				", url='" + url + '\'' +
 				", context='" + context + '\'' +
-				", id='" + id + '\'' +
+				", blogId='" + blogId + '\'' +
 				", readCount='" + readCount + '\'' +
 				", creatTime='" + creatTime + '\'' +
 				'}';
