@@ -8,6 +8,7 @@
 */
 package com.ongl.chen.utils.spider.beans;
 
+import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.annotations.TableName;
 import com.ongl.chen.utils.spider.common.SuperEntity;
 
@@ -29,12 +30,17 @@ public class CsdnBlogDetail extends SuperEntity
 	String url;
 	
 	String context;
-	
+
+	@TableField("blog_id")
 	String blogId;
 
+	@TableField("read_count")
 	String readCount;
 
+	@TableField("creat_time")
 	String creatTime;
+
+
 
 	public String getTitle() {
 		return title;

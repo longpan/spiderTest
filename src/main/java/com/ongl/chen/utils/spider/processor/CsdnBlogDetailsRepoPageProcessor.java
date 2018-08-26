@@ -10,6 +10,10 @@ package com.ongl.chen.utils.spider.processor;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -92,6 +96,7 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 			//article_content
 			String content = page.getHtml().$("#article_content").xpath("/allText()").toString();
 			blogDetail.setReadCount(readCounts);
+			createTime = chageTime(createTime);
 			blogDetail.setCreatTime(createTime);
 //			blogDetail.setContext(content);
 
@@ -129,6 +134,22 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 
 //		page.getHtml().xpath(xpath)
 		
+
+	}
+
+	public String chageTime(String timeStr) {
+		DateFormat format = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+
+		DateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Date date = null;
+		String result = "";
+		try {
+			date = format.parse(timeStr);
+			result = format1.format(date);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return result;
 
 	}
 

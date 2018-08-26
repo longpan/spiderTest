@@ -3,6 +3,7 @@ package com.ongl.chen.utils.spider.pipline;
 import com.ongl.chen.utils.spider.beans.CsdnBlogDetail;
 import com.ongl.chen.utils.spider.dao.BlogDetailDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.ResultItems;
 import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.pipeline.Pipeline;
@@ -10,6 +11,7 @@ import us.codecraft.webmagic.pipeline.Pipeline;
 /**
  * Created by apple on 2018/8/21.
  */
+@Component
 public class CsdnBlogDetailPipline implements Pipeline {
 
     @Autowired
