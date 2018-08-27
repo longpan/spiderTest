@@ -20,6 +20,7 @@ import java.util.List;
 import com.ongl.chen.utils.spider.beans.CsdnBlogDetail;
 
 import com.ongl.chen.utils.spider.pipline.CsdnBlogDetailPipline;
+import com.ongl.chen.utils.spider.utils.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Page;
@@ -85,7 +86,7 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 		} else if ((page.getUrl()).regex(URL_DETAIL).match()){
 			System.out.println("2222222");
 
-			String id = getIdByUrl(page.getUrl().toString());
+			String id = FileUtil.getIdByUrl(page.getUrl().toString());
 			CsdnBlogDetail blogDetail = blogMap.get(id);
 			if(blogDetail == null) {
 				return;
@@ -116,7 +117,7 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 
 				String title = item.xpath("//a/text()").toString();
 				String url = item.links().toString();
-				String id = getIdByUrl(url);
+				String id = FileUtil.getIdByUrl(url);
 				detail.setTitle(title);
 				detail.setUrl(url);
 				detail.setBlogId(id);
@@ -153,13 +154,7 @@ public class CsdnBlogDetailsRepoPageProcessor implements PageProcessor {
 
 	}
 
-	public String getIdByUrl(String url) {
-		if(url == null || "".equals(url)) {
-			return "";
-		}else {
-			return url.substring(url.lastIndexOf("/") + 1);
-		}
-	}
+
 
     public Site getSite() {
         return site;

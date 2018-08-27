@@ -9,6 +9,10 @@
 package com.ongl.chen.utils.spider.processor;
 
 import com.ongl.chen.utils.spider.beans.JDProductDetail;
+import com.ongl.chen.utils.spider.pipline.JDProductDetailPipline;
+import com.ongl.chen.utils.spider.utils.FileUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
@@ -26,7 +30,7 @@ import java.util.List;
 * @date 2018年8月15日
 *
 */
-
+@Component
 public class JDProductProcessor implements PageProcessor {
 
     private Site site = Site.me().setRetryTimes(3).setSleepTime(100);
@@ -40,6 +44,9 @@ public class JDProductProcessor implements PageProcessor {
     public static final String URL_INDEX = "https://baby.jd.com/";
 
     private HashMap<String, String> typeMap = new HashMap<String, String>();
+
+    @Autowired
+    JDProductDetailPipline jdProductDetailPipline;
 
 
     public void process(Page page) {
@@ -104,15 +111,18 @@ public class JDProductProcessor implements PageProcessor {
                 productDetail.setUrl(url);
                 productDetail.setImgUrl(imgUrl);
                 productDetail.setPriceStr(priceStr);
-                productDetail.setpTag(pTag);
+//                productDetail.setpTag(pTag);
                 productDetail.setpName(pName);
                 productDetail.setpCommitNumStr(pCommitNumStr);
                 productDetail.setpShopName(pShopName);
                 productDetail.setpShopUrl(pShopUrl);
                 productDetail.setpIcons(pIcons);
 
-                System.out.println(productDetail.toString());
+                productDetail.setType(typeMap.get(page.getHtml().getDocument().baseUri()));
+                productDetail.setPId(FileUtil.getIdByUrl(url));
 
+
+                page.putField("product_detail", productDetail);
 //                page.addTargetRequest(url);
             }
         }
@@ -127,9 +137,14 @@ public class JDProductProcessor implements PageProcessor {
     }
 
     public static void main(String[] args) {
+        new JDProductProcessor().start();
+    }
+
+    public void start() {
         System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
         String indexUrl = "https://channel.jd.com/1319-1523.html";
+//        String indexUrl = ""
 //        String index = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
-        Spider.create(new JDProductProcessor()).addUrl(indexUrl).setDownloader(new SeleniumDownloader("/usr/local/bin/chromedriver")).thread(1).run();
+        Spider.create(new JDProductProcessor()).addUrl(indexUrl).addPipeline(jdProductDetailPipline).setDownloader(new SeleniumDownloader("/usr/local/bin/chromedriver")).thread(1).run();
     }
 }

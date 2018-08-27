@@ -1,6 +1,7 @@
 package com.ongl.chen.utils.spider;
 
 import com.ongl.chen.utils.spider.processor.CsdnBlogDetailsRepoPageProcessor;
+import com.ongl.chen.utils.spider.processor.JDProductProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -15,8 +16,9 @@ public class App
 
         System.out.println( "Hello World!" );
         ApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:/spring/spring*.xml");
-        final CsdnBlogDetailsRepoPageProcessor csdnSpider = applicationContext.getBean(CsdnBlogDetailsRepoPageProcessor.class);
+        final JDProductProcessor jdSpider = applicationContext.getBean(JDProductProcessor.class);
+
 //        jobCrawler.crawl();
-        csdnSpider.start();
+        jdSpider.start();
     }
 }
