@@ -10,6 +10,8 @@ import us.codecraft.webmagic.ResultItems;
 import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.pipeline.Pipeline;
 
+import java.util.List;
+
 /**
  * Created by apple on 2018/8/21.
  */
@@ -22,12 +24,14 @@ public class JDProductDetailPipline implements Pipeline {
     public void process(ResultItems resultItems, Task task) {
 
         System.out.println("insert product");
-        JDProductDetail jdProductDetail = resultItems.get("product_detail");
-        if(jdProductDetail != null) {
-            System.out.println(jdProductDetail.toString());
+        List<JDProductDetail> productDetailList = resultItems.get("product_detail_list");
 
-            jdProductDetailDAO.insert(jdProductDetail);
+        for(JDProductDetail detail : productDetailList) {
+            System.out.println(detail.toString());
+//            jdProductDetailDAO.insert(detail);
         }
+
+
 
     }
 }

@@ -9,6 +9,7 @@
 package com.ongl.chen.utils.spider.processor;
 
 import com.ongl.chen.utils.spider.beans.JDProductDetail;
+import com.ongl.chen.utils.spider.downloader.JDSeleniuDownloader;
 import com.ongl.chen.utils.spider.pipline.JDProductDetailPipline;
 import com.ongl.chen.utils.spider.utils.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import us.codecraft.webmagic.downloader.selenium.SeleniumDownloader;
 import us.codecraft.webmagic.processor.PageProcessor;
 import us.codecraft.webmagic.selector.Selectable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -92,6 +94,7 @@ public class JDProductProcessor implements PageProcessor {
             System.out.println("item list");
             //获取左边分类信息
             List<Selectable> itemList = page.getHtml().$("#J_goodsList").css("li").nodes();
+            List<JDProductDetail> productDetailList = new ArrayList<JDProductDetail>();
 
             for( Selectable item: itemList) {
                 String url = item.$(".p-img").links().toString();
@@ -111,7 +114,7 @@ public class JDProductProcessor implements PageProcessor {
                 productDetail.setUrl(url);
                 productDetail.setImgUrl(imgUrl);
                 productDetail.setPriceStr(priceStr);
-//                productDetail.setpTag(pTag);
+                productDetail.setpTag(pTag);
                 productDetail.setpName(pName);
                 productDetail.setpCommitNumStr(pCommitNumStr);
                 productDetail.setpShopName(pShopName);
@@ -121,10 +124,11 @@ public class JDProductProcessor implements PageProcessor {
                 productDetail.setType(typeMap.get(page.getHtml().getDocument().baseUri()));
                 productDetail.setPId(FileUtil.getIdByUrl(url));
 
+                productDetailList.add(productDetail);
 
-                page.putField("product_detail", productDetail);
 //                page.addTargetRequest(url);
             }
+            page.putField("product_detail_list", productDetailList);
         }
 
         System.out.println("end");
@@ -145,6 +149,6 @@ public class JDProductProcessor implements PageProcessor {
         String indexUrl = "https://channel.jd.com/1319-1523.html";
 //        String indexUrl = ""
 //        String index = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
-        Spider.create(new JDProductProcessor()).addUrl(indexUrl).addPipeline(jdProductDetailPipline).setDownloader(new SeleniumDownloader("/usr/local/bin/chromedriver")).thread(1).run();
+        Spider.create(new JDProductProcessor()).addUrl(indexUrl).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader("/usr/local/bin/chromedriver")).thread(1).run();
     }
 }
