@@ -1,10 +1,9 @@
 package com.ongl.chen.utils.spider.downloader;
 
+import com.ongl.chen.utils.spider.processor.JDProductProcessor;
 import org.apache.log4j.Logger;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Cookie;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Request;
 import us.codecraft.webmagic.Site;
@@ -16,6 +15,8 @@ import us.codecraft.webmagic.selector.PlainText;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by apple on 2018/8/29.
@@ -73,7 +74,29 @@ public class JDSeleniuDownloader implements Downloader, Closeable {
         }
         logger.info("downloading page " + request.getUrl());
         webDriver.get(request.getUrl());
-//        webDriver.
+
+        Pattern p = Pattern.compile(JDProductProcessor.URL_ITEM_LIST);
+        Matcher m = p.matcher(request.getUrl());
+
+        if(m.find()) {
+            //将页面滚动条拖到底部
+            int step = 400;
+            int start_y = 500;
+            for (int index = 0; index < 10; index ++) {
+                int postion_y = start_y + step * index;
+                ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0," + postion_y + ");");
+//            ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0,document.body.scrollHeight);");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+
+
         try {
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {

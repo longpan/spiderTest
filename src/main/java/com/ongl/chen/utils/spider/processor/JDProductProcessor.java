@@ -96,6 +96,8 @@ public class JDProductProcessor implements PageProcessor {
             List<Selectable> itemList = page.getHtml().$("#J_goodsList").css("li").nodes();
             List<JDProductDetail> productDetailList = new ArrayList<JDProductDetail>();
 
+            System.out.println("size == " + itemList.size());
+
             for( Selectable item: itemList) {
                 String url = item.$(".p-img").links().toString();
                 String imgUrl = item.$(".p-img").xpath("//img/@src").toString();

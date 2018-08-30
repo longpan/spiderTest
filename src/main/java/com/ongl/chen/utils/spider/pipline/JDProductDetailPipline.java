@@ -27,7 +27,7 @@ public class JDProductDetailPipline implements Pipeline {
         List<JDProductDetail> productDetailList = resultItems.get("product_detail_list");
 
         for(JDProductDetail detail : productDetailList) {
-            System.out.println(detail.toString());
+//            System.out.println(detail.toString());
 //            jdProductDetailDAO.insert(detail);
         }
 
