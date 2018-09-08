@@ -80,9 +80,9 @@ public class JDSeleniuDownloader implements Downloader, Closeable {
 
         if(m.find()) {
             //将页面滚动条拖到底部
-            int step = 400;
+            int step = 9500;
             int start_y = 500;
-            for (int index = 0; index < 10; index ++) {
+            for (int index = 0; index < 2; index ++) {
                 int postion_y = start_y + step * index;
                 ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0," + postion_y + ");");
 //            ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0,document.body.scrollHeight);");
@@ -94,6 +94,8 @@ public class JDSeleniuDownloader implements Downloader, Closeable {
             }
 
         }
+
+
 
 
 

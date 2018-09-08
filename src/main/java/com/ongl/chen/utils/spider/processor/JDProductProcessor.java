@@ -24,6 +24,7 @@ import us.codecraft.webmagic.selector.Selectable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
 * @ClassName: GithubRepoPageProcessor
@@ -46,6 +47,8 @@ public class JDProductProcessor implements PageProcessor {
     public static final String URL_INDEX = "https://baby.jd.com/";
 
     private HashMap<String, String> typeMap = new HashMap<String, String>();
+
+    private static final String pageParms = "page";
 
     @Autowired
     JDProductDetailPipline jdProductDetailPipline;
@@ -98,6 +101,8 @@ public class JDProductProcessor implements PageProcessor {
 
             System.out.println("size == " + itemList.size());
 
+
+
             for( Selectable item: itemList) {
                 String url = item.$(".p-img").links().toString();
                 String imgUrl = item.$(".p-img").xpath("//img/@src").toString();
@@ -134,12 +139,143 @@ public class JDProductProcessor implements PageProcessor {
         }
 
         System.out.println("end");
-        
+
+        String pageUrl = page.getUrl().all().get(0).toString();
+        String nextPageUrl = getNextPageUrl(pageUrl);
+
+        typeMap.put(nextPageUrl, page.getHtml().getDocument().baseUri());
+        page.addTargetRequest(nextPageUrl);
+
+
+
 //        System.out.println(page.toString());
     }
 
     public Site getSite() {
         return site;
+    }
+
+    public String getNextPageUrl(String thisUrl) {
+
+        Map<String, String> mapRequest = URLRequest(thisUrl);
+        int pageNum = 1;
+        if (mapRequest.containsKey(pageParms)) {
+            String pageStr = mapRequest.get(pageParms);
+            int page = Integer.parseInt(pageStr);
+            page = page + 2;
+            mapRequest.put(pageParms, page + "");
+        }else {
+            mapRequest.put(pageParms, "3");
+        }
+        String baseUrl = getBaseUrl(thisUrl);
+
+        String nextUrl =  constuctUrl(mapRequest, baseUrl);
+
+
+
+        return nextUrl;
+
+    }
+
+    private String constuctUrl(Map<String, String> mapRequest, String baseUrl) {
+        int paraseNum = 0;
+        String url = baseUrl;
+        for (Map.Entry<String, String> entry : mapRequest.entrySet()) {
+            if(paraseNum == 0) {
+                url = url + "?" + entry.getKey() + "=" + entry.getValue();
+            }else {
+                url = url + "&" + entry.getKey() + "=" + entry.getValue();
+            }
+            paraseNum ++;
+        }
+        return url;
+    }
+
+    /**
+     * 解析出url参数中的键值对
+     * 如 "index.jsp?Action=del&id=123"，解析出Action:del,id:123存入map中
+     *
+     * @param URL url地址
+     * @return url请求参数部分
+     */
+    public static Map<String, String> URLRequest(String URL) {
+        Map<String, String> mapRequest = new HashMap<String, String>();
+
+        String[] arrSplit = null;
+
+        String strUrlParam = TruncateUrlPage(URL);
+        if (strUrlParam == null) {
+            return mapRequest;
+        }
+        //每个键值为一组 www.2cto.com
+        arrSplit = strUrlParam.split("[&]");
+        for (String strSplit : arrSplit) {
+            String[] arrSplitEqual = null;
+            arrSplitEqual = strSplit.split("[=]");
+
+            //解析出键值
+            if (arrSplitEqual.length > 1) {
+                //正确解析
+                mapRequest.put(arrSplitEqual[0], arrSplitEqual[1]);
+
+            } else {
+                if (arrSplitEqual[0] != "") {
+                    //只有参数没有值，不加入
+                    mapRequest.put(arrSplitEqual[0], "");
+                }
+            }
+        }
+        return mapRequest;
+    }
+
+
+    /**
+     * 去掉url中的路径，留下请求参数部分
+     *
+     * @param strURL url地址
+     * @return url请求参数部分
+     */
+    private static String TruncateUrlPage(String strURL) {
+        String strAllParam = null;
+        String[] arrSplit = null;
+
+        strURL = strURL.trim();
+
+        arrSplit = strURL.split("[?]");
+        if (strURL.length() > 1) {
+            if (arrSplit.length > 1) {
+                if (arrSplit[1] != null) {
+                    strAllParam = arrSplit[1];
+                }
+            }
+        }
+
+        return strAllParam;
+    }
+
+    /**
+     * 去掉请求参数部分，留下url中的路径
+     *
+     * @param strURL url地址
+     * @return url请求参数部分
+     */
+    private static String getBaseUrl(String strURL) {
+        String strAllParam = null;
+        String[] arrSplit = null;
+
+        strURL = strURL.trim();
+
+        arrSplit = strURL.split("[?]");
+        if (strURL.length() > 1) {
+            if (arrSplit.length > 0) {
+                if (arrSplit[0] != null) {
+                    strAllParam = arrSplit[0];
+                }
+            }
+        }
+
+
+        return strAllParam;
     }
 
     public static void main(String[] args) {
@@ -148,9 +284,9 @@ public class JDProductProcessor implements PageProcessor {
 
     public void start() {
         System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
-        String indexUrl = "https://channel.jd.com/1319-1523.html";
+//        String indexUrl = "https://channel.jd.com/1319-1523.html";
 //        String indexUrl = ""
-//        String index = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
+        String indexUrl = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
         Spider.create(new JDProductProcessor()).addUrl(indexUrl).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader("/usr/local/bin/chromedriver")).thread(1).run();
     }
 }

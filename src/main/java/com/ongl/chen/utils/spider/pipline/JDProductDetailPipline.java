@@ -23,12 +23,12 @@ public class JDProductDetailPipline implements Pipeline {
 
     public void process(ResultItems resultItems, Task task) {
 
-        System.out.println("insert product");
+//        System.out.println("insert product");
         List<JDProductDetail> productDetailList = resultItems.get("product_detail_list");
 
         for(JDProductDetail detail : productDetailList) {
 //            System.out.println(detail.toString());
-//            jdProductDetailDAO.insert(detail);
+            jdProductDetailDAO.insert(detail);
         }
 
 
