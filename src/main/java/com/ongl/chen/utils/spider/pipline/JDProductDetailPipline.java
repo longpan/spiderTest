@@ -24,6 +24,9 @@ public class JDProductDetailPipline implements Pipeline {
     public void process(ResultItems resultItems, Task task) {
 
 //        System.out.println("insert product");
+        if(resultItems == null || resultItems.get("product_detail_list") == null) {
+            return;
+        }
         List<JDProductDetail> productDetailList = resultItems.get("product_detail_list");
 
         for(JDProductDetail detail : productDetailList) {

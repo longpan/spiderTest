@@ -21,6 +21,8 @@ import us.codecraft.webmagic.downloader.selenium.SeleniumDownloader;
 import us.codecraft.webmagic.processor.PageProcessor;
 import us.codecraft.webmagic.selector.Selectable;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -136,15 +138,22 @@ public class JDProductProcessor implements PageProcessor {
 //                page.addTargetRequest(url);
             }
             page.putField("product_detail_list", productDetailList);
+
+
+            String pageUrl = page.getUrl().all().get(0).toString();
+            String nextPageUrl = getNextPageUrl(pageUrl);
+
+            if(nextPageUrl != null && !"".equals(nextPageUrl)) {
+                typeMap.put(nextPageUrl, typeMap.get(page.getHtml().getDocument().baseUri()));
+                page.addTargetRequest(nextPageUrl);
+
+            }
+
+
+
         }
 
         System.out.println("end");
-
-        String pageUrl = page.getUrl().all().get(0).toString();
-        String nextPageUrl = getNextPageUrl(pageUrl);
-
-        typeMap.put(nextPageUrl, page.getHtml().getDocument().baseUri());
-        page.addTargetRequest(nextPageUrl);
 
 
 
@@ -164,6 +173,10 @@ public class JDProductProcessor implements PageProcessor {
             int page = Integer.parseInt(pageStr);
             page = page + 2;
             mapRequest.put(pageParms, page + "");
+
+            if(page >= 201) {
+                return  "";
+            }
         }else {
             mapRequest.put(pageParms, "3");
         }
@@ -279,14 +292,34 @@ public class JDProductProcessor implements PageProcessor {
     }
 
     public static void main(String[] args) {
-        new JDProductProcessor().start();
+
+//        new JDProductProcessor().start();
+        String result = null;
+        try {
+            result = URLEncoder.encode("2段奶粉", "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        System.out.println(result);
     }
 
     public void start() {
         System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
 //        String indexUrl = "https://channel.jd.com/1319-1523.html";
-//        String indexUrl = ""
-        String indexUrl = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
-        Spider.create(new JDProductProcessor()).addUrl(indexUrl).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader("/usr/local/bin/chromedriver")).thread(1).run();
+        String indexUrl = "https://search.jd.com/Search?enc=utf-8&spm=2.1.0";
+
+        String result = null;
+        try {
+            result = URLEncoder.encode("尿片", "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        String url = indexUrl + "&keyword=" + result;
+        typeMap.put(url, "尿片");
+
+
+//        String indexUrl = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
+//        String indexUrl = "https://search.jd.com/Search?keyword=2%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&spm=2.1.0";
+        Spider.create(new JDProductProcessor()).addUrl(url).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader("/usr/local/bin/chromedriver")).thread(5).run();
     }
 }
