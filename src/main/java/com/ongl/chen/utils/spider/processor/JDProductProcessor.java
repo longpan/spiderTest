@@ -14,6 +14,7 @@ import com.ongl.chen.utils.spider.pipline.JDProductDetailPipline;
 import com.ongl.chen.utils.spider.utils.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
@@ -48,9 +49,11 @@ public class JDProductProcessor implements PageProcessor {
 
     public static final String URL_INDEX = "https://baby.jd.com/";
 
-    private HashMap<String, String> typeMap = new HashMap<String, String>();
+    public static HashMap<String, String> typeMap = new HashMap<String, String>();
 
     private static final String pageParms = "page";
+
+    public static final int maxPageNum = 201; //100页
 
     @Autowired
     JDProductDetailPipline jdProductDetailPipline;
@@ -103,7 +106,7 @@ public class JDProductProcessor implements PageProcessor {
 
             System.out.println("size == " + itemList.size());
 
-
+            String pType = typeMap.get(page.getHtml().getDocument().baseUri());
 
             for( Selectable item: itemList) {
                 String url = item.$(".p-img").links().toString();
@@ -130,7 +133,7 @@ public class JDProductProcessor implements PageProcessor {
                 productDetail.setpShopUrl(pShopUrl);
                 productDetail.setpIcons(pIcons);
 
-                productDetail.setType(typeMap.get(page.getHtml().getDocument().baseUri()));
+                productDetail.setType(pType);
                 productDetail.setPId(FileUtil.getIdByUrl(url));
 
                 productDetailList.add(productDetail);
@@ -174,7 +177,8 @@ public class JDProductProcessor implements PageProcessor {
             page = page + 2;
             mapRequest.put(pageParms, page + "");
 
-            if(page >= 201) {
+            //大于100页就停止
+            if(page >= maxPageNum) {
                 return  "";
             }
         }else {
@@ -294,13 +298,30 @@ public class JDProductProcessor implements PageProcessor {
     public static void main(String[] args) {
 
 //        new JDProductProcessor().start();
-        String result = null;
-        try {
-            result = URLEncoder.encode("2段奶粉", "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+//        String result = null;
+//        try {
+//            result = URLEncoder.encode("2段奶粉", "utf-8");
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }
+        String keyWords = "暖奶消毒,辅食料理机,吸奶器";
+
+        String[] words = keyWords.split(",");
+        String indexUrl = "https://search.jd.com/Search?enc=utf-8&spm=2.1.0";
+
+
+        for(String word : words) {
+            System.out.println(word);
+            String keyWordEncode = null;
+            try {
+                keyWordEncode = URLEncoder.encode( word, "utf-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            String url = indexUrl + "&keyword=" + keyWordEncode;
+            typeMap.put(url, word);
         }
-        System.out.println(result);
+        System.out.println(typeMap.toString());
     }
 
     public void start() {
@@ -308,18 +329,29 @@ public class JDProductProcessor implements PageProcessor {
 //        String indexUrl = "https://channel.jd.com/1319-1523.html";
         String indexUrl = "https://search.jd.com/Search?enc=utf-8&spm=2.1.0";
 
-        String result = null;
-        try {
-            result = URLEncoder.encode("尿片", "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        String keyWords = "暖奶消毒,辅食料理机,吸奶器";
+
+
+        String[] words = keyWords.split(",");
+        List<String> urlList = new ArrayList<String>();
+
+
+        for(String word : words) {
+            System.out.println(word);
+            String keyWordEncode = null;
+            try {
+                keyWordEncode = URLEncoder.encode( word, "utf-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            String url = indexUrl + "&keyword=" + keyWordEncode;
+            typeMap.put(url, word);
+            urlList.add(url);
         }
-        String url = indexUrl + "&keyword=" + result;
-        typeMap.put(url, "尿片");
 
 
 //        String indexUrl = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
 //        String indexUrl = "https://search.jd.com/Search?keyword=2%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&spm=2.1.0";
-        Spider.create(new JDProductProcessor()).addUrl(url).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader("/usr/local/bin/chromedriver")).thread(5).run();
+        Spider.create(new JDProductProcessor()).addUrl(urlList.toArray(new String[urlList.size()])).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader("/usr/local/bin/chromedriver")).thread(5).run();
     }
 }
