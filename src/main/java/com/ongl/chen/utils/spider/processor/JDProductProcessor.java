@@ -325,7 +325,8 @@ public class JDProductProcessor implements PageProcessor {
     }
 
     public void start() {
-        System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
+//        System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
+        System.setProperty("selenuim_config", "/home/ubuntu/proenv/selenium_config.ini");
 //        String indexUrl = "https://channel.jd.com/1319-1523.html";
         String indexUrl = "https://search.jd.com/Search?enc=utf-8&spm=2.1.0";
 
@@ -348,10 +349,12 @@ public class JDProductProcessor implements PageProcessor {
             typeMap.put(url, word);
             urlList.add(url);
         }
+//        String chromeDriverPath = "/usr/local/bin/chromedriver";
+        String chromeDriverPath = "/usr/bin/chromedriver";
 
 
 //        String indexUrl = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
 //        String indexUrl = "https://search.jd.com/Search?keyword=2%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&spm=2.1.0";
-        Spider.create(new JDProductProcessor()).addUrl(urlList.toArray(new String[urlList.size()])).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader("/usr/local/bin/chromedriver")).thread(5).run();
+        Spider.create(new JDProductProcessor()).addUrl(urlList.toArray(new String[urlList.size()])).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader(chromeDriverPath)).thread(5).run();
     }
 }
