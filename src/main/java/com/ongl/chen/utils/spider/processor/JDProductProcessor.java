@@ -330,7 +330,7 @@ public class JDProductProcessor implements PageProcessor {
 //        String indexUrl = "https://channel.jd.com/1319-1523.html";
         String indexUrl = "https://search.jd.com/Search?enc=utf-8&spm=2.1.0";
 
-        String keyWords = "暖奶消毒,辅食料理机,吸奶器";
+        String keyWords = "奶瓶奶嘴,牙胶安抚,食物存储,儿童餐具,围兜/防溅衣,水壶/水杯";
 
 
         String[] words = keyWords.split(",");

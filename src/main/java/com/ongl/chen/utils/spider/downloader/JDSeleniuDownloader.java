@@ -105,6 +105,7 @@ public class JDSeleniuDownloader implements Downloader, Closeable {
             e.printStackTrace();
         }
         WebDriver.Options manage = webDriver.manage();
+
         Site site = task.getSite();
         if (site.getCookies() != null) {
             for (Map.Entry<String, String> cookieEntry : site.getCookies()

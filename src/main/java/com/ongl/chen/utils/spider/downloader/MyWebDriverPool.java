@@ -3,6 +3,7 @@ package com.ongl.chen.utils.spider.downloader;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
@@ -113,6 +114,13 @@ public class MyWebDriverPool {
         cliArgsCap.add("--web-security=false");
         cliArgsCap.add("--ssl-protocol=any");
         cliArgsCap.add("--ignore-ssl-errors=true");
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("test-type"); //ignore certificate errors
+        options.addArguments("headless");// headless mode
+        options.addArguments("disable-gpu");
+
+
         sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS,
                 cliArgsCap);
 
@@ -133,7 +141,7 @@ public class MyWebDriverPool {
         } else if (driver.equals(DRIVER_FIREFOX)) {
             mDriver = new FirefoxDriver(sCaps);
         } else if (driver.equals(DRIVER_CHROME)) {
-            mDriver = new ChromeDriver(sCaps);
+            mDriver = new ChromeDriver(options);
         } else if (driver.equals(DRIVER_PHANTOMJS)) {
             mDriver = new PhantomJSDriver(sCaps);
         }
