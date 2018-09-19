@@ -28,11 +28,14 @@ public class JDProductDetailPipline implements Pipeline {
             return;
         }
         List<JDProductDetail> productDetailList = resultItems.get("product_detail_list");
-
+        
+        //todo： 改成批量插入
         for(JDProductDetail detail : productDetailList) {
 //            System.out.println(detail.toString());
             jdProductDetailDAO.insert(detail);
         }
+        
+        
 
 
 

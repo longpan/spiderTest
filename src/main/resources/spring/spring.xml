@@ -11,5 +11,6 @@ http://www.springframework.org/schema/context/spring-context-3.0.xsd
 	<context:annotation-config/>
 
 	<context:component-scan base-package="com.ongl.chen.utils.spider"/>
+	<import resource="classpath*:**/applicationContext-profile.xml"/>
 
 </beans>
