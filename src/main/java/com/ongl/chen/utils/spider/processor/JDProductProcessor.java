@@ -121,6 +121,14 @@ public class JDProductProcessor implements PageProcessor {
                 String  pShopUrl = item.$(".p-shop").links().toString();
 
                 String pIcons = item.$(".p-icons").xpath("//i/text()").toString();
+                Double price = 0d;
+                try {
+                    price = Double.parseDouble(priceStr);
+                }catch (Exception e) {
+                    System.out.println("parse price err: " + priceStr);
+                }
+
+                int commitNum = FileUtil.parseCommitNum(pCommitNumStr);
 
                 JDProductDetail productDetail = new JDProductDetail();
                 productDetail.setUrl(url);
@@ -135,6 +143,10 @@ public class JDProductProcessor implements PageProcessor {
 
                 productDetail.setType(pType);
                 productDetail.setPId(FileUtil.getIdByUrl(url));
+
+                productDetail.setPrice(price);
+                productDetail.setCommitNum(commitNum);
+
 
                 productDetailList.add(productDetail);
 
@@ -162,6 +174,8 @@ public class JDProductProcessor implements PageProcessor {
 
 //        System.out.println(page.toString());
     }
+
+
 
     public Site getSite() {
         return site;
@@ -325,12 +339,13 @@ public class JDProductProcessor implements PageProcessor {
     }
 
     public void start() {
-//        System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
-        System.setProperty("selenuim_config", "/home/ubuntu/proenv/selenium_config.ini");
+        System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
+//        System.setProperty("selenuim_config", "/home/ubuntu/proenv/selenium_config.ini");
 //        String indexUrl = "https://channel.jd.com/1319-1523.html";
         String indexUrl = "https://search.jd.com/Search?enc=utf-8&spm=2.1.0";
 
-        String keyWords = "奶瓶奶嘴,牙胶安抚,食物存储,儿童餐具,围兜/防溅衣,水壶/水杯";
+        String keyWords = "1段,2段,3段,4段,孕妈奶粉,特殊配方奶粉,有机奶粉,米粉/菜粉,面条/粥,果汁/果泥,益生菌/初乳,DHA,钙铁锌/维生素,宝宝零食,清火/开胃,拉拉裤,成人尿裤,婴儿湿巾,洗发沐浴,洗澡用具,洗衣液/皂,座便器,宝宝护肤,日常护理,理发器,婴儿口腔清洁,驱蚊防晒,婴儿推车,安全座椅,提篮式,增高垫,婴儿床,婴儿床垫,餐椅摇椅,童乐车,电动车,自行车,三轮车,滑板车,扭扭车,学步车";
+//        String keyWords = "尿片";
 
 
         String[] words = keyWords.split(",");
@@ -349,12 +364,12 @@ public class JDProductProcessor implements PageProcessor {
             typeMap.put(url, word);
             urlList.add(url);
         }
-//        String chromeDriverPath = "/usr/local/bin/chromedriver";
-        String chromeDriverPath = "/usr/bin/chromedriver";
+        String chromeDriverPath = "/usr/local/bin/chromedriver";
+//        String chromeDriverPath = "/usr/bin/chromedriver";
 
 
 //        String indexUrl = "https://search.jd.com/Search?keyword=1%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&wq=1%E6%AE%B5%E5%A5%B6%E7%B2%89&pvid=wu368axi.eoe5m8";
 //        String indexUrl = "https://search.jd.com/Search?keyword=2%E6%AE%B5%E5%A5%B6%E7%B2%89&enc=utf-8&spm=2.1.0";
-        Spider.create(new JDProductProcessor()).addUrl(urlList.toArray(new String[urlList.size()])).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader(chromeDriverPath)).thread(5).run();
+        Spider.create(new JDProductProcessor()).addUrl(urlList.toArray(new String[urlList.size()])).addPipeline(jdProductDetailPipline).setDownloader(new JDSeleniuDownloader(chromeDriverPath)).thread(10).run();
     }
 }

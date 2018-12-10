@@ -24,7 +24,7 @@ public class JDProductDetail extends SuperEntity {
     @TableField("p_name")
     String pName;
 
-    @TableField("p_commit_num")
+    @TableField("p_commit_num_str")
     String pCommitNumStr;
 
     @TableField("p_shop_name")
@@ -41,6 +41,15 @@ public class JDProductDetail extends SuperEntity {
 
     @TableField("p_id")
     String PId;
+
+    @TableField("p_page")
+    String pPage;
+
+    @TableField("price")
+    Double price;
+
+    @TableField("p_commit_num")
+    Integer commitNum;
 
 
 
@@ -130,6 +139,30 @@ public class JDProductDetail extends SuperEntity {
 
     public void setPId(String PId) {
         this.PId = PId;
+    }
+
+    public String getpPage() {
+        return pPage;
+    }
+
+    public void setpPage(String pPage) {
+        this.pPage = pPage;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Integer getCommitNum() {
+        return commitNum;
+    }
+
+    public void setCommitNum(Integer commitNum) {
+        this.commitNum = commitNum;
     }
 
     @Override
