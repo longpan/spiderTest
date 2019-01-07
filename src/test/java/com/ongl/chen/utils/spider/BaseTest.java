@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.ongl.chen.utils.spider.beans.JDProductDetail;
 import com.ongl.chen.utils.spider.beans.UserInfo;
+import com.ongl.chen.utils.spider.hbasedao.JDProductDetailHbaseDAO;
 import com.ongl.chen.utils.spider.hbasedao.UserInfoMapper;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -17,6 +19,9 @@ public class BaseTest {
 
 	@Autowired
 	UserInfoMapper userInfoMapper;
+	
+	@Autowired
+	JDProductDetailHbaseDAO jDProductDetailHbaseDAO;
 
 	@Test
 	public void addUser() {
@@ -24,6 +29,14 @@ public class BaseTest {
 		userInfo.setId(6);
 		userInfo.setName("Jerry");
 		userInfoMapper.addUser(userInfo);
+	}
+	
+	@Test
+	public void addProduct() {
+		JDProductDetail detail = new JDProductDetail();
+		detail.setId(1L);
+		detail.setpName("mybatis insert");
+		jDProductDetailHbaseDAO.addProduct(detail);
 	}
 
 	@Test
