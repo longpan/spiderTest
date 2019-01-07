@@ -1,5 +1,7 @@
 package com.ongl.chen.utils.spider;
 
+import com.ongl.chen.utils.spider.beans.UserInfo;
+import com.ongl.chen.utils.spider.hbasedao.UserInfoMapper;
 import com.ongl.chen.utils.spider.processor.CsdnBlogDetailsRepoPageProcessor;
 import com.ongl.chen.utils.spider.processor.JDProductProcessor;
 import org.springframework.context.ApplicationContext;
@@ -19,6 +21,11 @@ public class App
         final JDProductProcessor jdSpider = applicationContext.getBean(JDProductProcessor.class);
 
 //        jobCrawler.crawl();
-        jdSpider.start();
+//        jdSpider.start();
+        UserInfoMapper userInfoMapper = applicationContext.getBean(UserInfoMapper.class);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId(3);
+        userInfo.setName("Jerry222");
+        userInfoMapper.addUser(userInfo);
     }
 }
