@@ -21,11 +21,7 @@ public class App
         final JDProductProcessor jdSpider = applicationContext.getBean(JDProductProcessor.class);
 
 //        jobCrawler.crawl();
-//        jdSpider.start();
-        UserInfoMapper userInfoMapper = applicationContext.getBean(UserInfoMapper.class);
-        UserInfo userInfo = new UserInfo();
-        userInfo.setId(3);
-        userInfo.setName("Jerry222");
-        userInfoMapper.addUser(userInfo);
+        jdSpider.start();
+       
     }
 }
