@@ -344,8 +344,8 @@ public class JDProductProcessor implements PageProcessor {
 //        String indexUrl = "https://channel.jd.com/1319-1523.html";
         String indexUrl = "https://search.jd.com/Search?enc=utf-8&spm=2.1.0";
 
-        String keyWords = "1段,2段,3段,4段,孕妈奶粉,特殊配方奶粉,有机奶粉,米粉/菜粉,面条/粥,果汁/果泥,益生菌/初乳,DHA,钙铁锌/维生素,宝宝零食,清火/开胃,拉拉裤,成人尿裤,婴儿湿巾,洗发沐浴,洗澡用具,洗衣液/皂,座便器,宝宝护肤,日常护理,理发器,婴儿口腔清洁,驱蚊防晒,婴儿推车,安全座椅,提篮式,增高垫,婴儿床,婴儿床垫,餐椅摇椅,童乐车,电动车,自行车,三轮车,滑板车,扭扭车,学步车";
-//        String keyWords = "尿片";
+//        String keyWords = "1段,2段,3段,4段,孕妈奶粉,特殊配方奶粉,有机奶粉,米粉/菜粉,面条/粥,果汁/果泥,益生菌/初乳,DHA,钙铁锌/维生素,宝宝零食,清火/开胃,拉拉裤,成人尿裤,婴儿湿巾,洗发沐浴,洗澡用具,洗衣液/皂,座便器,宝宝护肤,日常护理,理发器,婴儿口腔清洁,驱蚊防晒,婴儿推车,安全座椅,提篮式,增高垫,婴儿床,婴儿床垫,餐椅摇椅,童乐车,电动车,自行车,三轮车,滑板车,扭扭车,学步车";
+        String keyWords = "尿片";
 
 
         String[] words = keyWords.split(",");

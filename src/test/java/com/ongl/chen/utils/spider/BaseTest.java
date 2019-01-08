@@ -34,8 +34,8 @@ public class BaseTest {
 	@Test
 	public void addProduct() {
 		JDProductDetail detail = new JDProductDetail();
-		detail.setId(1L);
-		detail.setpName("mybatis insert");
+//		detail.setId(1L);
+		detail.setpName("22222");
 		jDProductDetailHbaseDAO.addProduct(detail);
 	}
 
