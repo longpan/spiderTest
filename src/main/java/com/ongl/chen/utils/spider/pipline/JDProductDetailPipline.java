@@ -22,8 +22,8 @@ public class JDProductDetailPipline implements Pipeline {
     @Autowired
     private JDProductDetailDAO jdProductDetailDAO;
 
-    @Autowired
-    private JDProductDetailHbaseDAO jdProductDetailHbaseDAO;
+//    @Autowired
+//    private JDProductDetailHbaseDAO jdProductDetailHbaseDAO;
 
     public static long id = 1;
 
@@ -43,7 +43,7 @@ public class JDProductDetailPipline implements Pipeline {
 //            System.out.println(detail.toString());
             detail.setId(id++);
 //            jdProductDetailDAO.insert(detail);
-            jdProductDetailHbaseDAO.addProduct(detail);
+//            jdProductDetailHbaseDAO.addProduct(detail);
         }
         
         

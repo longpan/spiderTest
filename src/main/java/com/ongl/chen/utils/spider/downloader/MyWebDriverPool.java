@@ -1,6 +1,5 @@
 package com.ongl.chen.utils.spider.downloader;
 
-import org.apache.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -26,7 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by apple on 2018/8/30.
  */
 public class MyWebDriverPool {
-    private Logger logger = Logger.getLogger(getClass());
 
     private final static int DEFAULT_CAPACITY = 5;
 
@@ -234,7 +232,6 @@ public class MyWebDriverPool {
             throw new IllegalStateException("Already closed!");
         }
         for (WebDriver webDriver : webDriverList) {
-            logger.info("Quit webDriver" + webDriver);
             webDriver.quit();
             webDriver = null;
         }

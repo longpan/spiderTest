@@ -21,7 +21,7 @@ public class CsdnBlogDetailPipline implements Pipeline {
 
         CsdnBlogDetail csdnBlogDetail = resultItems.get("blog");
 
-        blogDetailDAO.insert(csdnBlogDetail);
+//        blogDetailDAO.insert(csdnBlogDetail);
     }
 }
 

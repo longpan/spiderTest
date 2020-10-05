@@ -1,7 +1,6 @@
 package com.ongl.chen.utils.spider.downloader;
 
 import com.ongl.chen.utils.spider.processor.JDProductProcessor;
-import org.apache.log4j.Logger;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import us.codecraft.webmagic.Page;
@@ -24,7 +23,6 @@ import java.util.regex.Pattern;
 public class JDSeleniuDownloader implements Downloader, Closeable {
     private volatile MyWebDriverPool webDriverPool;
 
-    private Logger logger = Logger.getLogger(getClass());
 
     private int sleepTime = 0;
 
@@ -69,10 +67,8 @@ public class JDSeleniuDownloader implements Downloader, Closeable {
         try {
             webDriver = webDriverPool.get();
         } catch (InterruptedException e) {
-            logger.warn("interrupted", e);
             return null;
         }
-        logger.info("downloading page " + request.getUrl());
         webDriver.get(request.getUrl());
 
         Pattern p = Pattern.compile(JDProductProcessor.URL_ITEM_LIST);
