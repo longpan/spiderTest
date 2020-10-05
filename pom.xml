@@ -33,10 +33,7 @@
                   <artifactId>commons-logging</artifactId>
                   <groupId>commons-logging</groupId>
               </exclusion>
-              <exclusion>
-                  <artifactId>commons-lang3</artifactId>
-                  <groupId>org.apache.commons</groupId>
-              </exclusion>
+
           </exclusions>
       </dependency>
 
