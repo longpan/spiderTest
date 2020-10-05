@@ -5,17 +5,16 @@ import lombok.Data;
 
 @Data
 @Builder
-public class LagouJobDetail {
+public class GXRFWJobDetail {
     String companyName;
     String postName;
     String salary;
-
     String exp;
-    String industry;
     String benefit;
     String area;
     String publicTime;
     String href;
     String keyWord;
-
+    String companyAptitude;
+    String bref;
 }
