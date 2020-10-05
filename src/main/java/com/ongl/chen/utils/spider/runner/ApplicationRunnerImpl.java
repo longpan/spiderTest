@@ -1,5 +1,6 @@
 package com.ongl.chen.utils.spider.runner;
 
+import com.ongl.chen.utils.spider.processor.GXRCWProcessor;
 import com.ongl.chen.utils.spider.processor.JDProductProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -21,6 +22,9 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
     @Autowired
     private JDProductProcessor jdProductProcessor;
 
+    @Autowired
+    private GXRCWProcessor gxrcwProcessor;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         System.out.println("通过实现ApplicationRunner接口，在spring boot项目启动后打印参数");
@@ -28,7 +32,7 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
         for (String arg : sourceArgs) {
             System.out.print(arg + " ");
         }
-        jdProductProcessor.start();
+        gxrcwProcessor.start();
         System.out.println();
     }
 }

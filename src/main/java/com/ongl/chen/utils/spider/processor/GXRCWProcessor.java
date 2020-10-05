@@ -9,7 +9,10 @@
 package com.ongl.chen.utils.spider.processor;
 
 import com.ongl.chen.utils.spider.GXRFWJobDetail;
+import com.ongl.chen.utils.spider.pipline.GXRCWExcelPipline;
 import com.ongl.chen.utils.spider.utils.UrlStringUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
@@ -29,7 +32,7 @@ import java.util.Map;
 */
 
 
-
+@Component
 public class GXRCWProcessor implements PageProcessor {
 
     private static final String pagePara = "page";
@@ -38,7 +41,12 @@ public class GXRCWProcessor implements PageProcessor {
 
     private Site site = Site.me().setRetryTimes(3).setSleepTime(100);
 
-    public static final int maxPageNum = 20; //20页
+    public static final int maxPageNum = 33; //20页
+
+    @Autowired
+    private GXRCWExcelPipline gxrcwExcelPipline;
+
+    List<GXRFWJobDetail> allJobList = new ArrayList<>();
 
     public void process(Page page) {
         String keyWord = getKeyWordByUrl(page.getUrl().toString());
@@ -63,6 +71,8 @@ public class GXRCWProcessor implements PageProcessor {
         }
         System.out.println(jobList.size());
 
+        allJobList.addAll(jobList);
+
         //下一页
         String pageUrl = page.getUrl().all().get(0).toString();
         String nextPageUrl = getNextPageUrl(pageUrl);
@@ -70,6 +80,9 @@ public class GXRCWProcessor implements PageProcessor {
         if(nextPageUrl != null && !"".equals(nextPageUrl)) {
             page.addTargetRequest(nextPageUrl);
 
+        }else {
+
+            page.putField("job_list", allJobList);
         }
     }
 
@@ -77,12 +90,17 @@ public class GXRCWProcessor implements PageProcessor {
         return site;
     }
 
+    public void start() {
+        Spider.create(new GXRCWProcessor()).addUrl("https://s.gxrc.com/sJob?keyword=java&schType=1&page=1").addPipeline(gxrcwExcelPipline).thread(10).run();
+
+    }
+
     public static void main(String[] args) {
         System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
         String chromeDriverPath = "/usr/local/bin/chromedriver";
 //        String chromeDriverPath = "/usr/bin/chromedriver";
 
-        Spider.create(new GXRCWProcessor()).addUrl("https://s.gxrc.com/sJob?keyword=java&schType=1&page=2").thread(10).run();
+        Spider.create(new GXRCWProcessor()).addUrl("https://s.gxrc.com/sJob?keyword=java&schType=1&page=2").thread(1).run();
     }
 
     public static String getKeyWordByUrl(String url) {
