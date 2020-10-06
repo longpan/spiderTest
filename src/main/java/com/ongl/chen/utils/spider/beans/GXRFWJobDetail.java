@@ -1,4 +1,4 @@
-package com.ongl.chen.utils.spider;
+package com.ongl.chen.utils.spider.beans;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Builder;

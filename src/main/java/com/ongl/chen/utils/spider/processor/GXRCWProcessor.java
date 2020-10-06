@@ -8,7 +8,7 @@
 */
 package com.ongl.chen.utils.spider.processor;
 
-import com.ongl.chen.utils.spider.GXRFWJobDetail;
+import com.ongl.chen.utils.spider.beans.GXRFWJobDetail;
 import com.ongl.chen.utils.spider.pipline.GXRCWExcelPipline;
 import com.ongl.chen.utils.spider.utils.UrlStringUtil;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -24,6 +24,7 @@ import us.codecraft.webmagic.processor.PageProcessor;
 import us.codecraft.webmagic.selector.Selectable;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,8 +54,10 @@ public class JDProductProcessor implements PageProcessor {
     public static HashMap<String, String> typeMap = new HashMap<String, String>();
 
     private static final String pageParms = "page";
+    private static final String keyWordPara = "keyword";
 
-    public static final int maxPageNum = 201; //100页
+
+    public static final int maxPageNum = 60; //100页
 
     @Autowired
     JDProductDetailPipline jdProductDetailPipline;
@@ -62,6 +65,7 @@ public class JDProductProcessor implements PageProcessor {
 
     public void process(Page page) {
 
+        String keyWord = getKeyWordByUrl(page.getUrl().toString());
         //母婴首页
         if (page.getUrl().toString().equals(URL_INDEX)) {
 
@@ -153,7 +157,6 @@ public class JDProductProcessor implements PageProcessor {
 
 //                page.addTargetRequest(url);
             }
-            page.putField("product_detail_list", productDetailList);
 
 
             String pageUrl = page.getUrl().all().get(0).toString();
@@ -163,13 +166,14 @@ public class JDProductProcessor implements PageProcessor {
                 typeMap.put(nextPageUrl, typeMap.get(page.getHtml().getDocument().baseUri()));
                 page.addTargetRequest(nextPageUrl);
 
+            }else {
+                page.putField("product_detail_list", productDetailList);
+                page.putField("keyWord", keyWord);
             }
 
 
 
         }
-
-        System.out.println("end");
 
 
 
@@ -235,38 +239,46 @@ public class JDProductProcessor implements PageProcessor {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            String url = indexUrl + "&keyword=" + keyWordEncode;
+            String url = indexUrl + "&" + keyWordPara + "=" + keyWordEncode;
             typeMap.put(url, word);
         }
         System.out.println(typeMap.toString());
     }
 
-    public void start() {
+    public String getKeyWordByUrl(String url) {
+        Map<String, String> paraMap = UrlStringUtil.URLRequest(url);
+        String keyWordEncode = paraMap.get(keyWordPara);
+        try {
+            String keyWordDecode = URLDecoder.decode( keyWordEncode, "utf-8");
+            return keyWordDecode;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    public void start(String keyWord) {
         System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
 //        System.setProperty("selenuim_config", "/home/ubuntu/proenv/selenium_config.ini");
 //        String indexUrl = "https://channel.jd.com/1319-1523.html";
         String indexUrl = "https://search.jd.com/Search?enc=utf-8&spm=2.1.0";
 
 //        String keyWords = "1段,2段,3段,4段,孕妈奶粉,特殊配方奶粉,有机奶粉,米粉/菜粉,面条/粥,果汁/果泥,益生菌/初乳,DHA,钙铁锌/维生素,宝宝零食,清火/开胃,拉拉裤,成人尿裤,婴儿湿巾,洗发沐浴,洗澡用具,洗衣液/皂,座便器,宝宝护肤,日常护理,理发器,婴儿口腔清洁,驱蚊防晒,婴儿推车,安全座椅,提篮式,增高垫,婴儿床,婴儿床垫,餐椅摇椅,童乐车,电动车,自行车,三轮车,滑板车,扭扭车,学步车";
-        String keyWords = "尿片";
 
 
-        String[] words = keyWords.split(",");
         List<String> urlList = new ArrayList<String>();
 
-
-        for(String word : words) {
-            System.out.println(word);
+            System.out.println(keyWord);
             String keyWordEncode = null;
             try {
-                keyWordEncode = URLEncoder.encode( word, "utf-8");
+                keyWordEncode = URLEncoder.encode( keyWord, "utf-8");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            String url = indexUrl + "&keyword=" + keyWordEncode;
-            typeMap.put(url, word);
+            String url = indexUrl + "&" + keyWordPara + "=" + keyWordEncode;
+
+            typeMap.put(url, keyWord);
             urlList.add(url);
-        }
         String chromeDriverPath = "/usr/local/bin/chromedriver";
 //        String chromeDriverPath = "/usr/bin/chromedriver";
 

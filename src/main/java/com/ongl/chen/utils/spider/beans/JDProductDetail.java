@@ -1,5 +1,6 @@
 package com.ongl.chen.utils.spider.beans;
 
+import com.alibaba.excel.annotation.ExcelProperty;
 import com.ongl.chen.utils.spider.common.SuperEntity;
 
 /**
@@ -7,32 +8,34 @@ import com.ongl.chen.utils.spider.common.SuperEntity;
  */
 public class JDProductDetail extends SuperEntity {
 
+    @ExcelProperty("链接")
     String url ;
 
+    @ExcelProperty("图片链接")
     String imgUrl ;
-
+    @ExcelProperty("价格")
     String priceStr;
-
+    @ExcelProperty("标签")
     String pTag;
-
+    @ExcelProperty("产品名称")
     String pName;
-
+    @ExcelProperty("评论数")
     String pCommitNumStr;
-
+    @ExcelProperty("店铺名称")
     String  pShopName;
-
+    @ExcelProperty("店铺链接")
     String  pShopUrl;
-
+    @ExcelProperty("图标")
     String pIcons;
-
+    @ExcelProperty("类型")
     String type;
-
+    @ExcelProperty("id")
     String PId;
-
+    @ExcelProperty("页码")
     String pPage;
-
+    @ExcelProperty("价格（数字）")
     Double price;
-
+    @ExcelProperty("评论数（数字）")
     Integer commitNum;
 
 

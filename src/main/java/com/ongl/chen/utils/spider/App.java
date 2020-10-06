@@ -21,7 +21,7 @@ public class App
         final JDProductProcessor jdSpider = applicationContext.getBean(JDProductProcessor.class);
 
 //        jobCrawler.crawl();
-        jdSpider.start();
+        jdSpider.start("奶粉");
        
     }
 }

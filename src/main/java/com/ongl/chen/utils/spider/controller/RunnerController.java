@@ -18,8 +18,14 @@ public class RunnerController {
     private GXRCWProcessor gxrcwProcessor;
 
     @GetMapping("/gxrcw")
-    public void demo(@RequestParam(required = true) String keyWord) {
+    public void gxrcw(@RequestParam(required = true) String keyWord) {
 
         gxrcwProcessor.start(keyWord);
+    }
+
+    @GetMapping("/jd")
+    public void jd(@RequestParam(required = true) String keyWord) {
+
+        jdProductProcessor.start(keyWord);
     }
 }
