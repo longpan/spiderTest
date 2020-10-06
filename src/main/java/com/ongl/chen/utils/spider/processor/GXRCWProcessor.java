@@ -75,7 +75,7 @@ public class GXRCWProcessor implements PageProcessor {
 
         //下一页
         String pageUrl = page.getUrl().all().get(0).toString();
-        String nextPageUrl = getNextPageUrl(pageUrl);
+        String nextPageUrl = getNextPageUrl(pageUrl, jobList.size());
 
         if(nextPageUrl != null && !"".equals(nextPageUrl)) {
             page.addTargetRequest(nextPageUrl);
@@ -83,6 +83,7 @@ public class GXRCWProcessor implements PageProcessor {
         }else {
 
             page.putField("job_list", allJobList);
+            page.putField("keyWord", keyWord);
         }
     }
 
@@ -90,8 +91,8 @@ public class GXRCWProcessor implements PageProcessor {
         return site;
     }
 
-    public void start() {
-        Spider.create(new GXRCWProcessor()).addUrl("https://s.gxrc.com/sJob?keyword=java&schType=1&page=1").addPipeline(gxrcwExcelPipline).thread(10).run();
+    public void start(String keyWord) {
+        Spider.create(new GXRCWProcessor()).addUrl("https://s.gxrc.com/sJob?keyword=" + keyWord + "&schType=1&page=1").addPipeline(gxrcwExcelPipline).thread(10).run();
 
     }
 
@@ -109,7 +110,7 @@ public class GXRCWProcessor implements PageProcessor {
         return paraMap.get(keywordPara);
     }
 
-    public String getNextPageUrl(String thisUrl) {
+    public String getNextPageUrl(String thisUrl, int count) {
 
         Map<String, String> mapRequest = UrlStringUtil.URLRequest(thisUrl);
         int pageNum = 1;
@@ -119,9 +120,13 @@ public class GXRCWProcessor implements PageProcessor {
             page = page + 1;
             mapRequest.put(pagePara, page + "");
 
-            //大于100页就停止
-            if(page >= maxPageNum) {
-                return  "";
+//            //大于100页就停止
+//            if(page >= maxPageNum) {
+//                return  "";
+//            }
+            //如果当前页没有数据，则停止
+            if(count <= 0) {
+                return "";
             }
         }else {
             mapRequest.put(pagePara, "3");

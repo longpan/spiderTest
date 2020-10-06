@@ -21,14 +21,15 @@ public class GXRCWExcelPipline implements Pipeline {
             return;
         }
         List<GXRFWJobDetail> jobList = resultItems.get("job_list");
-        saveExcel(jobList);
+        String keyWord = resultItems.get("keyWord");
+        saveExcel(jobList, keyWord);
     }
 
-    public static void saveExcel(List<GXRFWJobDetail> jobList) {
+    public static void saveExcel(List<GXRFWJobDetail> jobList, String keyWord) {
         // 写法2
         String basePath = System.getProperty("user.dir") + "/save-data/";
-        basePath = "/Users/apple/projects/temp/";
-        String fileName = basePath +  "gxrcw"  + ".xlsx";
+        basePath = "/Users/apple/projects/temp/saveData/";
+        String fileName = basePath +  "gxrcw_" + keyWord  + ".xlsx";
         // 这里 需要指定写用哪个class去写
         ExcelWriter excelWriter = null;
         try {

@@ -32,7 +32,7 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
         for (String arg : sourceArgs) {
             System.out.print(arg + " ");
         }
-        gxrcwProcessor.start();
-        System.out.println();
+//        gxrcwProcessor.start("java");
+
     }
 }
