@@ -97,7 +97,8 @@ public class GXRCWProcessor implements PageProcessor {
     }
 
     public static void main(String[] args) {
-        System.setProperty("selenuim_config", "/Users/apple/Proenv/selenium/config.ini");
+        System.setProperty("selenuim_config", "/Users/onglchen/proenv/selenium/config.ini");
+        System.setProperty("https.protocols", "TLSv1.2");
         String chromeDriverPath = "/usr/local/bin/chromedriver";
 //        String chromeDriverPath = "/usr/bin/chromedriver";
 

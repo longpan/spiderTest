@@ -115,7 +115,7 @@ public class MyWebDriverPool {
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("test-type"); //ignore certificate errors
-        options.addArguments("headless");// headless mode
+        //options.addArguments("headless");// headless mode
         options.addArguments("disable-gpu");
 
 
