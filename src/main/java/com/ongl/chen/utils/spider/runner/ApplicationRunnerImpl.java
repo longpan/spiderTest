@@ -37,7 +37,7 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
             System.out.print(arg + " ");
         }
     //    gxrcwProcessor.start("java");
-       cbgMhxysyProcessorV2.start();
+//       cbgMhxysyProcessorV2.start();
 
     }
 }

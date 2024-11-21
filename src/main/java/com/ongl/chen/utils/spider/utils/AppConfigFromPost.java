@@ -10,6 +10,8 @@ public class AppConfigFromPost {
 
     private String chromeDriverPath;
 
+    private String resultSavePath;
+
     //最大下拉刷新次数
     private int maxPullDownCount = 1000;
 
@@ -21,6 +23,9 @@ public class AppConfigFromPost {
 
     //获取详细链接睡眠时间（毫秒）
     private int getDetailUrlSleepTimeMillis = 3000;
+
+
+    private boolean headlessMode;
 
 
     public String getSelenuimConfig() {
@@ -69,5 +74,21 @@ public class AppConfigFromPost {
 
     public void setGetDetailUrlSleepTimeMillis(int getDetailUrlSleepTimeMillis) {
         this.getDetailUrlSleepTimeMillis = getDetailUrlSleepTimeMillis;
+    }
+
+    public boolean isHeadlessMode() {
+        return headlessMode;
+    }
+
+    public void setHeadlessMode(boolean headlessMode) {
+        this.headlessMode = headlessMode;
+    }
+
+    public String getResultSavePath() {
+        return resultSavePath;
+    }
+
+    public void setResultSavePath(String resultSavePath) {
+        this.resultSavePath = resultSavePath;
     }
 }

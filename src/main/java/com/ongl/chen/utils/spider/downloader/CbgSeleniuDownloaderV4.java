@@ -210,7 +210,7 @@ public class CbgSeleniuDownloaderV4 implements Downloader, Closeable {
 
 
         }
-
+        ConstantUtils.resultSavePath = appConfigFromPost.getResultSavePath();
         webDriverPool.returnToPool(webDriver);
         return page;
     }

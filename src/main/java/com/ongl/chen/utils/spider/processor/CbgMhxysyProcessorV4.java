@@ -106,6 +106,7 @@ public class CbgMhxysyProcessorV4 implements PageProcessor {
 
 
         page.putField("cbg_item_list", cbgItemList);
+            page.putField("resultSavePath", "");
 
     }
 
