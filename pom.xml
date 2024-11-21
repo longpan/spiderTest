@@ -155,7 +155,7 @@
       <dependency>
           <groupId>org.projectlombok</groupId>
           <artifactId>lombok</artifactId>
-          <version>1.18.10</version>
+          <version>1.18.20</version>
           <optional>true</optional>
       </dependency>
       <!-- mybatis plus 代码生成器 -->
@@ -239,6 +239,15 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -275,6 +284,10 @@
             <!--</configuration>-->
             <!--</plugin>-->
 
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
 
         </plugins>
     </build>
