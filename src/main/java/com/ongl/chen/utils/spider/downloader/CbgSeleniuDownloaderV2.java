@@ -1,7 +1,11 @@
 package com.ongl.chen.utils.spider.downloader;
 
-import com.ongl.chen.utils.spider.processor.JDProductProcessor;
+import com.ongl.chen.utils.spider.beans.CbgItem;
+import com.ongl.chen.utils.spider.utils.ConstantUtils;
+import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Request;
 import us.codecraft.webmagic.Site;
@@ -9,21 +13,22 @@ import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.downloader.Downloader;
 import us.codecraft.webmagic.selector.Html;
 import us.codecraft.webmagic.selector.PlainText;
+import us.codecraft.webmagic.selector.Selectable;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by apple on 2018/8/29.
  */
-public class CbgSeleniuDownloader implements Downloader, Closeable {
-    private volatile MyWebDriverPool webDriverPool;
+public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
+    public volatile MyWebDriverPool webDriverPool;
 
 
-    private int sleepTime = 5000;
+    private int sleepTime = 2000;
 
     private int poolSize = 1;
 
@@ -34,7 +39,7 @@ public class CbgSeleniuDownloader implements Downloader, Closeable {
      *
      * @param chromeDriverPath chromeDriverPath
      */
-    public CbgSeleniuDownloader(String chromeDriverPath) {
+    public CbgSeleniuDownloaderV2(String chromeDriverPath) {
         System.getProperties().setProperty("webdriver.chrome.driver",
                 chromeDriverPath);
     }
@@ -44,7 +49,7 @@ public class CbgSeleniuDownloader implements Downloader, Closeable {
      *
      * @author bob.li.0718@gmail.com
      */
-    public CbgSeleniuDownloader() {
+    public CbgSeleniuDownloaderV2() {
         // System.setProperty("phantomjs.binary.path",
         // "/Users/Bingo/Downloads/phantomjs-1.9.7-macosx/bin/phantomjs");
     }
@@ -55,11 +60,12 @@ public class CbgSeleniuDownloader implements Downloader, Closeable {
      * @param sleepTime sleepTime
      * @return this
      */
-    public CbgSeleniuDownloader setSleepTime(int sleepTime) {
+    public CbgSeleniuDownloaderV2 setSleepTime(int sleepTime) {
         this.sleepTime = sleepTime;
         return this;
     }
 
+    @SneakyThrows
     public Page download(Request request, Task task) {
         checkInit();
         WebDriver webDriver;
@@ -82,15 +88,22 @@ public class CbgSeleniuDownloader implements Downloader, Closeable {
         webDriver.navigate().refresh();*/
 
             //将页面滚动条拖到底部
-            int step = 9500;
+            int step = 13000;
             int start_y = 500;
-            for (int index = 0; index < 300; index ++) {
+
+            for (int index = 0; index < 600; index ++) {
                 int postion_y = start_y + step * index;
                 ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0," + postion_y + ");");
 //            ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0,document.body.scrollHeight);");
+                //actions.click().build().perform();
                 try {
                     System.out.println(index);
-                    Thread.sleep(10000);
+                    Thread.sleep(3000);
+                    System.out.println(webDriver.findElements(By.className("info-wrap")).size());
+                    if(webDriver.findElements(By.className("info-wrap")).size() > 100) {
+                        index = 300;
+                        break;
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -130,6 +143,66 @@ public class CbgSeleniuDownloader implements Downloader, Closeable {
         page.setHtml(new Html(content, request.getUrl()));
         page.setUrl(new PlainText(request.getUrl()));
         page.setRequest(request);
+
+//        //解析列表
+//        List<Selectable> itemList = page.getHtml().$(".info").nodes();
+//        List<CbgItem> cbgItemList = new ArrayList<CbgItem>();
+//
+//        System.out.println("size == " + itemList.size());
+
+
+        Actions actions = new Actions(webDriver);
+
+        WebElement btnCloseElement = webDriver.findElement(By.className("btn-close"));
+
+        // 使用Actions类模拟鼠标点击
+        actions.click(btnCloseElement).build().perform();
+
+        List<String> detaiUrlList = ConstantUtils.detaiUrlList;
+        List<WebElement> itemListElement = webDriver.findElements(By.className("info-wrap"));
+
+//        for(int index = 0; index < itemListElement.size(); index ++) {
+//            List<WebElement> itemListElementTemp = webDriver.findElements(By.className("info-wrap"));
+//            WebElement itemElement = itemListElementTemp.get(index);
+//            actions.click(itemElement).build().perform();
+//            String detail = webDriver.getCurrentUrl();
+//            System.out.println(detail);
+//            detaiUrlList.add(detail);
+//        }
+//        WebElement itemElement = itemListElement.get(0);
+        int index = 0;
+        for(WebElement itemElement : itemListElement) {
+
+            try{
+                actions.click(itemElement).build().perform();
+                Thread.sleep(3000);
+                String detail = webDriver.getCurrentUrl();
+                System.out.println(detail);
+                System.out.println(index);
+                index++;
+                ConstantUtils.detaiUrlList.add(detail);
+
+                if(StringUtils.contains(detail, "equip")) {
+                    WebElement btnBackElement = webDriver.findElement(By.className("iff-icon-back"));
+                    actions.click(btnBackElement).build().perform();
+
+                    Thread.sleep(3000);
+                }
+            }catch (Exception e) {
+                System.out.println(e.getMessage());
+                ConstantUtils.detaiUrlList.add("");
+            }
+
+
+        }
+
+
+
+//        WebElement btnBackElement = webDriver.findElement(By.className("iff-icon-back"));
+//
+//        // 使用Actions类模拟鼠标点击
+//        actions.click(btnBackElement).build().perform();
+
         webDriverPool.returnToPool(webDriver);
         return page;
     }

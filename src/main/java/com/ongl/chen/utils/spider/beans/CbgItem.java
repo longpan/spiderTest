@@ -11,6 +11,12 @@ public class CbgItem extends SuperEntity {
     @ExcelProperty("等级")
     String level ;
 
+    @ExcelProperty("公标志")
+    String publicity;
+
+    @ExcelProperty("还标志")
+    String bargin;
+
     @ExcelProperty("服务器")
     String serverName ;
 
@@ -28,6 +34,9 @@ public class CbgItem extends SuperEntity {
 
     @ExcelProperty("收藏人数")
     String collect ;
+
+    @ExcelProperty("链接")
+    String detailUrl;
 
 
     public String getWrapName() {
@@ -92,5 +101,29 @@ public class CbgItem extends SuperEntity {
 
     public void setCollect(String collect) {
         this.collect = collect;
+    }
+
+    public String getPublicity() {
+        return publicity;
+    }
+
+    public void setPublicity(String publicity) {
+        this.publicity = publicity;
+    }
+
+    public String getBargin() {
+        return bargin;
+    }
+
+    public void setBargin(String bargin) {
+        this.bargin = bargin;
+    }
+
+    public String getDetailUrl() {
+        return detailUrl;
+    }
+
+    public void setDetailUrl(String detailUrl) {
+        this.detailUrl = detailUrl;
     }
 }

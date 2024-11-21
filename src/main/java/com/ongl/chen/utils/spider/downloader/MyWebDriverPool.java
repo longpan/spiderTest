@@ -118,6 +118,13 @@ public class MyWebDriverPool {
         //options.addArguments("headless");// headless mode
         options.addArguments("disable-gpu");
 
+        options.addArguments("disable-dev-shm-usage");
+        options.addArguments("disable-plugins");
+        String host = "127.0.0.1";
+        int port = 9090;
+        //options.addArguments("--proxy-server=http://"+host+":"+port);//**此处设置代理**
+        //options.addArguments("no-sandbox");
+
 
         sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS,
                 cliArgsCap);

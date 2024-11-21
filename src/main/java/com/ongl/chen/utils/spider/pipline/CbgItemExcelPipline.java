@@ -15,7 +15,7 @@ import java.util.List;
 @Component
 public class CbgItemExcelPipline implements Pipeline {
 
-   static String save_name_prefix = "cbgItem_";
+   static String save_name_prefix = "cbgItem";
 
     public void process(ResultItems resultItems, Task task) {
         if(resultItems == null || resultItems.get("cbg_item_list") == null) {
@@ -23,14 +23,14 @@ public class CbgItemExcelPipline implements Pipeline {
         }
         List<CbgItem> cbgItemList = resultItems.get("cbg_item_list");
         String keyWord = resultItems.get("keyWord");
-        saveExcel(cbgItemList, keyWord);
+        saveExcel(cbgItemList);
     }
 
-    public static void saveExcel(List<CbgItem> cbgItemList, String keyWord) {
+    public static void saveExcel(List<CbgItem> cbgItemList) {
         // 写法2
         String basePath = System.getProperty("user.dir") + "/save-data/";
         basePath = "/Users/onglchen/projects/temp/saveData/";
-        String fileName = basePath +  save_name_prefix + keyWord  + ".xlsx";
+        String fileName = basePath +  save_name_prefix + "_" + System.currentTimeMillis()   + ".xlsx";
         // 这里 需要指定写用哪个class去写
         ExcelWriter excelWriter = null;
         try {
