@@ -26,3 +26,19 @@ mybatis-plus:
       logic-not-delete-value: 1
       # 删除后
       logic-delete-value: 0
+
+
+
+selenuim:
+  config: /Users/onglchen/proenv/selenium/config.ini
+chrome:
+  driver:
+    path: /usr/local/bin/chromedriver
+
+max:
+  pull-down-count: 10
+  item-count: 20
+pull-down:
+  sleep-time-millis: 3000
+get-detail-url:
+  sleep-time-millis: 3000

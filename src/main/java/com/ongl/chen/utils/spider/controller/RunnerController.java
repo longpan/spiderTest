@@ -1,12 +1,12 @@
 package com.ongl.chen.utils.spider.controller;
 
+import com.ongl.chen.utils.spider.processor.CbgMhxysyProcessorV3;
+import com.ongl.chen.utils.spider.processor.CbgMhxysyProcessorV4;
 import com.ongl.chen.utils.spider.processor.GXRCWProcessor;
 import com.ongl.chen.utils.spider.processor.JDProductProcessor;
+import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class RunnerController {
@@ -16,6 +16,10 @@ public class RunnerController {
 
     @Autowired
     private GXRCWProcessor gxrcwProcessor;
+
+    @Autowired
+    private CbgMhxysyProcessorV4 cbgMhxysyProcessorV4;
+
 
     @GetMapping("/gxrcw")
     public void gxrcw(@RequestParam(required = true) String keyWord) {
@@ -27,5 +31,11 @@ public class RunnerController {
     public void jd(@RequestParam(required = true) String keyWord) {
 
         jdProductProcessor.start(keyWord);
+    }
+
+    @PostMapping("/cgb")
+    public void cbg(@RequestBody AppConfigFromPost appConfigFromPost) {
+
+        cbgMhxysyProcessorV4.start(appConfigFromPost);
     }
 }

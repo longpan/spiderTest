@@ -1,11 +1,12 @@
 package com.ongl.chen.utils.spider.downloader;
 
-import com.ongl.chen.utils.spider.beans.CbgItem;
+import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.ConstantUtils;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
+import org.springframework.beans.factory.annotation.Autowired;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Request;
 import us.codecraft.webmagic.Site;
@@ -13,18 +14,19 @@ import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.downloader.Downloader;
 import us.codecraft.webmagic.selector.Html;
 import us.codecraft.webmagic.selector.PlainText;
-import us.codecraft.webmagic.selector.Selectable;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by apple on 2018/8/29.
+
+ v3:关键参数读取配置，在linux上运行
  */
-public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
+
+public class CbgSeleniuDownloaderV3 implements Downloader, Closeable {
     public volatile MyWebDriverPool webDriverPool;
 
 
@@ -34,12 +36,16 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
 
     private static final String DRIVER_PHANTOMJS = "phantomjs";
 
+    @Autowired
+    private AppConfig appConfig;
+
+
     /**
      * 新建
      *
      * @param chromeDriverPath chromeDriverPath
      */
-    public CbgSeleniuDownloaderV2(String chromeDriverPath) {
+    public CbgSeleniuDownloaderV3(String chromeDriverPath) {
         System.getProperties().setProperty("webdriver.chrome.driver",
                 chromeDriverPath);
     }
@@ -49,7 +55,7 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
      *
      * @author bob.li.0718@gmail.com
      */
-    public CbgSeleniuDownloaderV2() {
+    public CbgSeleniuDownloaderV3() {
         // System.setProperty("phantomjs.binary.path",
         // "/Users/Bingo/Downloads/phantomjs-1.9.7-macosx/bin/phantomjs");
     }
@@ -60,7 +66,7 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
      * @param sleepTime sleepTime
      * @return this
      */
-    public CbgSeleniuDownloaderV2 setSleepTime(int sleepTime) {
+    public CbgSeleniuDownloaderV3 setSleepTime(int sleepTime) {
         this.sleepTime = sleepTime;
         return this;
     }
@@ -91,17 +97,16 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
             int step = 13000;
             int start_y = 500;
 
-            for (int index = 0; index < 600; index ++) {
+            for (int index = 0; index < appConfig.getMaxPullDownCount(); index ++) {
                 int postion_y = start_y + step * index;
                 ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0," + postion_y + ");");
 //            ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0,document.body.scrollHeight);");
                 //actions.click().build().perform();
                 try {
                     System.out.println(index);
-                    Thread.sleep(3000);
+                    Thread.sleep(appConfig.getPullDownSleepTimeMillis());
                     System.out.println(webDriver.findElements(By.className("info-wrap")).size());
-                    if(webDriver.findElements(By.className("info-wrap")).size() > 1000) {
-                        index = 300;
+                    if(webDriver.findElements(By.className("info-wrap")).size() > appConfig.getMaxItemCount()) {
                         break;
                     }
                 } catch (InterruptedException e) {
@@ -158,7 +163,6 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
         // 使用Actions类模拟鼠标点击
         actions.click(btnCloseElement).build().perform();
 
-        List<String> detaiUrlList = ConstantUtils.detaiUrlList;
         List<WebElement> itemListElement = webDriver.findElements(By.className("info-wrap"));
 
 //        for(int index = 0; index < itemListElement.size(); index ++) {
@@ -175,7 +179,7 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
 
             try{
                 actions.click(itemElement).build().perform();
-                Thread.sleep(3000);
+                Thread.sleep(appConfig.getGetDetailUrlSleepTimeMillis());
                 String detail = webDriver.getCurrentUrl();
                 System.out.println(detail);
                 System.out.println(index);
@@ -186,7 +190,7 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
                     WebElement btnBackElement = webDriver.findElement(By.className("iff-icon-back"));
                     actions.click(btnBackElement).build().perform();
 
-                    Thread.sleep(3000);
+                    Thread.sleep(appConfig.getGetDetailUrlSleepTimeMillis());
                 }
             }catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -195,13 +199,6 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
 
 
         }
-
-
-
-//        WebElement btnBackElement = webDriver.findElement(By.className("iff-icon-back"));
-//
-//        // 使用Actions类模拟鼠标点击
-//        actions.click(btnBackElement).build().perform();
 
         webDriverPool.returnToPool(webDriver);
         return page;
