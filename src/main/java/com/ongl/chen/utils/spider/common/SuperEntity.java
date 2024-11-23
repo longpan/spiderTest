@@ -3,6 +3,9 @@ package com.ongl.chen.utils.spider.common;
 /**
  * Created by apple on 2018/8/21.
  */
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+
 import java.io.Serializable;
 
 /**
@@ -17,6 +20,7 @@ public class SuperEntity implements Serializable {
     /**
      * 用户ID
      */
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     public Long getId() {

@@ -1,11 +1,14 @@
 package com.ongl.chen.utils.spider.downloader;
 
 import com.ongl.chen.utils.spider.beans.CbgItem;
+import com.ongl.chen.utils.spider.service.CbgItemService;
+import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
 import com.ongl.chen.utils.spider.utils.ConstantUtils;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
+import org.springframework.beans.factory.annotation.Autowired;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Request;
 import us.codecraft.webmagic.Site;
@@ -13,18 +16,19 @@ import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.downloader.Downloader;
 import us.codecraft.webmagic.selector.Html;
 import us.codecraft.webmagic.selector.PlainText;
-import us.codecraft.webmagic.selector.Selectable;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by apple on 2018/8/29.
+
+ v5:直接将详情存数据库中
  */
-public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
+
+public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
     public volatile MyWebDriverPool webDriverPool;
 
 
@@ -34,22 +38,44 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
 
     private static final String DRIVER_PHANTOMJS = "phantomjs";
 
+    private AppConfigFromPost appConfigFromPost;
+
+    private CbgItemService cbgItemService;
+
+
     /**
      * 新建
      *
      * @param chromeDriverPath chromeDriverPath
      */
-    public CbgSeleniuDownloaderV2(String chromeDriverPath) {
+    public CbgSeleniuDownloaderV5(String chromeDriverPath) {
         System.getProperties().setProperty("webdriver.chrome.driver",
                 chromeDriverPath);
     }
 
     /**
+     * 新建
+     *
+     * @param chromeDriverPath chromeDriverPath
+     */
+    public CbgSeleniuDownloaderV5(String chromeDriverPath, AppConfigFromPost appConfigFromPost) {
+        System.getProperties().setProperty("webdriver.chrome.driver",
+                chromeDriverPath);
+        this.appConfigFromPost = appConfigFromPost;
+    }
+
+    public CbgSeleniuDownloaderV5(String chromeDriverPath, AppConfigFromPost appConfigFromPost, CbgItemService cbgItemService) {
+        System.getProperties().setProperty("webdriver.chrome.driver",
+                chromeDriverPath);
+        this.appConfigFromPost = appConfigFromPost;
+        this.cbgItemService = cbgItemService;
+    }
+    /**
      * Constructor without any filed. Construct PhantomJS browser
      *
      * @author bob.li.0718@gmail.com
      */
-    public CbgSeleniuDownloaderV2() {
+    public CbgSeleniuDownloaderV5() {
         // System.setProperty("phantomjs.binary.path",
         // "/Users/Bingo/Downloads/phantomjs-1.9.7-macosx/bin/phantomjs");
     }
@@ -60,7 +86,7 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
      * @param sleepTime sleepTime
      * @return this
      */
-    public CbgSeleniuDownloaderV2 setSleepTime(int sleepTime) {
+    public CbgSeleniuDownloaderV5 setSleepTime(int sleepTime) {
         this.sleepTime = sleepTime;
         return this;
     }
@@ -91,17 +117,16 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
             int step = 13000;
             int start_y = 500;
 
-            for (int index = 0; index < 600; index ++) {
+            for (int index = 0; index < appConfigFromPost.getMaxPullDownCount(); index ++) {
                 int postion_y = start_y + step * index;
                 ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0," + postion_y + ");");
 //            ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0,document.body.scrollHeight);");
                 //actions.click().build().perform();
                 try {
                     System.out.println(index);
-                    Thread.sleep(3000);
+                    Thread.sleep(appConfigFromPost.getPullDownSleepTimeMillis());
                     System.out.println(webDriver.findElements(By.className("info-wrap")).size());
-                    if(webDriver.findElements(By.className("info-wrap")).size() > 300) {
-                        index = 300;
+                    if(webDriver.findElements(By.className("info-wrap")).size() > appConfigFromPost.getMaxItemCount()) {
                         break;
                     }
                 } catch (InterruptedException e) {
@@ -153,12 +178,15 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
 
         Actions actions = new Actions(webDriver);
 
-        WebElement btnCloseElement = webDriver.findElement(By.className("btn-close"));
+        try {
+            WebElement btnCloseElement = webDriver.findElement(By.className("btn-close"));
 
-        // 使用Actions类模拟鼠标点击
-        actions.click(btnCloseElement).build().perform();
+            // 使用Actions类模拟鼠标点击
+            actions.click(btnCloseElement).build().perform();
+        }catch (NoSuchElementException e) {
 
-        List<String> detaiUrlList = ConstantUtils.detaiUrlList;
+        }
+
         List<WebElement> itemListElement = webDriver.findElements(By.className("info-wrap"));
 
 //        for(int index = 0; index < itemListElement.size(); index ++) {
@@ -171,38 +199,115 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
 //        }
 //        WebElement itemElement = itemListElement.get(0);
         int index = 0;
+        int insertNumbers = 0;
+        int emptyNumbers = 0;
+        int repeatNumbers = 0;
         for(WebElement itemElement : itemListElement) {
 
             try{
+                CbgItem cbgItem = new CbgItem();
+
+
+                //点击进入详情页面
                 actions.click(itemElement).build().perform();
-                Thread.sleep(3000);
+                Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis());
                 String detail = webDriver.getCurrentUrl();
                 System.out.println(detail);
                 System.out.println(index);
                 index++;
-                ConstantUtils.detaiUrlList.add(detail);
+                cbgItem.setDetailUrl(detail);
 
-                if(StringUtils.contains(detail, "equip")) {
+                if(StringUtils.contains(detail, "show_login")){
+                    break;
+                }
+
+                    if(StringUtils.contains(detail, "equip")) {
+
+                    //解析详情页面
+                    cbgItem.setCode(webDriver.findElement(By.className("pageProductDetail")).getAttribute("ordersn"));
+                    cbgItem.setServerId(webDriver.findElement(By.className("pageProductDetail")).getAttribute("serverid"));
+                    cbgItem.setWrapName(webDriver.findElement(By.xpath("//div[@class='name']")).getText());
+                    cbgItem.setLevel(webDriver.findElement(By.xpath("//span[@class='level']")).getText());
+                    try {
+                        //收藏人数无法定位
+                        String collect = webDriver.findElement(By.xpath("//div[@class='row']/span[3]")).getText();
+                        if(StringUtils.contains(collect, "收藏")) {
+                            cbgItem.setCollect(collect);
+                        }
+                    }catch (NoSuchElementException e) {
+
+                    }
+
+                    cbgItem.setOverallScore(webDriver.findElement(By.xpath("//span[@class='basic_attrs_item']")).getText());
+                    cbgItem.setPersonScore(webDriver.findElement(By.xpath("//span[@class='basic_attrs_item'][2]")).getText());
+                    cbgItem.setPrice(webDriver.findElement(By.xpath("//div[@class='price']")).getText());
+                    cbgItem.setServerName(webDriver.findElement(By.xpath("//span[@class='area-server icon-text']")).getText());
+
+                    try{
+                        cbgItem.setTxt(webDriver.findElement(By.xpath("//div[@class='txt']")).getText());
+                    }catch (NoSuchElementException e) {
+
+                    }
+
+                    String bargin ="";
+                    try{
+                        webDriver.findElement(By.className("icon-bargin"));
+                        bargin = "还";
+                    }catch (NoSuchElementException e) {
+
+                    }
+                    cbgItem.setBargin(bargin);
+
+                    String publicity = "";
+                    try {
+                        webDriver.findElement(By.className("icon-publicity"));
+                        publicity = "公";
+                    }catch (NoSuchElementException e) {
+
+                    }
+                    cbgItem.setPublicity(publicity);
+
+                    String draw ="";
+                    try{
+                        webDriver.findElement(By.className("icon-draw"));
+                        draw = "抽";
+                    }catch (NoSuchElementException e) {
+
+                    }
+                    cbgItem.setDraw(draw);
+
+                    if(StringUtils.isEmpty(cbgItem.getWrapName())) {
+                        emptyNumbers ++;
+                        System.out.println("emptyNumbers : " + emptyNumbers);
+
+                        continue;
+                    }
+
+                    if(cbgItemService.insertByCode(cbgItem) == 1) {
+                        insertNumbers ++;
+                        System.out.println("insertNumbers : " + insertNumbers);
+                    }else {
+                        repeatNumbers ++;
+                        System.out.println("repeatNumbers : " + repeatNumbers);
+                    }
+
+
+                    //跳转回列表
                     WebElement btnBackElement = webDriver.findElement(By.className("iff-icon-back"));
                     actions.click(btnBackElement).build().perform();
 
-                    Thread.sleep(3000);
+                    Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis());
                 }
             }catch (Exception e) {
                 System.out.println(e.getMessage());
-                ConstantUtils.detaiUrlList.add("");
                 break;
             }
 
 
         }
-
-
-
-//        WebElement btnBackElement = webDriver.findElement(By.className("iff-icon-back"));
-//
-//        // 使用Actions类模拟鼠标点击
-//        actions.click(btnBackElement).build().perform();
+        System.out.println("insertNumbers : " + insertNumbers);
+        System.out.println("repeatNumbers : " + repeatNumbers);
+        ConstantUtils.resultSavePath = appConfigFromPost.getResultSavePath();
 
         webDriverPool.returnToPool(webDriver);
         return page;
@@ -213,6 +318,9 @@ public class CbgSeleniuDownloaderV2 implements Downloader, Closeable {
             synchronized (this) {
                 webDriverPool = new MyWebDriverPool(poolSize);
             }
+        }
+        if(cbgItemService == null) {
+
         }
     }
 

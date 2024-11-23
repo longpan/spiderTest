@@ -1,9 +1,9 @@
 package com.ongl.chen.utils.spider.controller;
 
-import com.ongl.chen.utils.spider.processor.CbgMhxysyProcessorV3;
-import com.ongl.chen.utils.spider.processor.CbgMhxysyProcessorV4;
-import com.ongl.chen.utils.spider.processor.GXRCWProcessor;
-import com.ongl.chen.utils.spider.processor.JDProductProcessor;
+import com.ongl.chen.utils.spider.beans.CbgItem;
+import com.ongl.chen.utils.spider.dao.CbgItemDAO;
+import com.ongl.chen.utils.spider.processor.*;
+import com.ongl.chen.utils.spider.service.CbgItemService;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,13 @@ public class RunnerController {
     private GXRCWProcessor gxrcwProcessor;
 
     @Autowired
-    private CbgMhxysyProcessorV4 cbgMhxysyProcessorV4;
+    private CbgMhxysyProcessorV5 cbgMhxysyProcessorV5;
+
+    @Autowired
+    private CbgItemDAO cbgItemDAO;
+
+    @Autowired
+    private CbgItemService cbgItemService;
 
 
     @GetMapping("/gxrcw")
@@ -34,8 +40,27 @@ public class RunnerController {
     }
 
     @PostMapping("/cgb")
-    public void cbg(@RequestBody AppConfigFromPost appConfigFromPost) {
+    public void cbg(@RequestBody AppConfigFromPost appConfigFromPost) throws InterruptedException {
+        int cycleIndex = 1;
+        while (true) {
+            try {
+                System.out.println("cbgMhxysyProcessorV5.start times: " + cycleIndex);
+                cbgMhxysyProcessorV5.start(appConfigFromPost, cbgItemService);
+                Thread.sleep(60*1000*10);
+            }catch (Exception e){
+                System.out.println("RunnerController Exception, errMsg: " + e.getMessage());
+            }
 
-        cbgMhxysyProcessorV4.start(appConfigFromPost);
+
+        }
+
+    }
+
+    @GetMapping("/test")
+    public void test() {
+        CbgItem cbgItem = new CbgItem();
+        cbgItem.setCode("xxx");
+//        cbgItemDAO.insert(cbgItem);
+        cbgItemService.insertByCode(cbgItem);
     }
 }

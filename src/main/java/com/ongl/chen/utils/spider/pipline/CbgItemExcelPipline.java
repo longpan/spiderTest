@@ -29,7 +29,7 @@ public class CbgItemExcelPipline implements Pipeline {
     public static void saveExcel(List<CbgItem> cbgItemList) {
         // 写法2
         String basePath = System.getProperty("user.dir") + "/save-data/";
-        //basePath = "/Users/onglchen/projects/temp/saveData/";
+        basePath = "/Users/onglchen/projects/temp/saveData/";
         String fileName = basePath +  save_name_prefix + "_" + System.currentTimeMillis()   + ".xlsx";
         // 这里 需要指定写用哪个class去写
         ExcelWriter excelWriter = null;

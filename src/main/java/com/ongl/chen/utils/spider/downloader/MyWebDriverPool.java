@@ -1,5 +1,6 @@
 package com.ongl.chen.utils.spider.downloader;
 
+import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -120,12 +121,15 @@ public class MyWebDriverPool {
 
         options.addArguments("disable-dev-shm-usage");
         options.addArguments("disable-plugins");
-        String host = "127.0.0.1";
-        int port = 9090;
-        //options.addArguments("--proxy-server=http://"+host+":"+port);//**此处设置代理**
-        //options.addArguments("no-sandbox");
+        String host = "y843.kdltps.com";
+        int port = 15818;
+        String proxyServer = "y843.kdltps.com:15818";
+        options.addArguments("--proxy-server=http://"+host+":"+port);//**此处设置代理**
+        options.addArguments("no-sandbox");
 
-
+        // 隧道域名: 端口号
+        //String proxyServer = "y843.kdltps.com:15818";
+        Proxy proxy = new Proxy().setHttpProxy(proxyServer).setSslProxy(proxyServer);
         sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS,
                 cliArgsCap);
 
