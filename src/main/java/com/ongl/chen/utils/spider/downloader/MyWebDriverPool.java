@@ -124,7 +124,7 @@ public class MyWebDriverPool {
         String host = "y843.kdltps.com";
         int port = 15818;
         String proxyServer = "y843.kdltps.com:15818";
-        options.addArguments("--proxy-server=http://"+host+":"+port);//**此处设置代理**
+       // options.addArguments("--proxy-server=http://"+host+":"+port);//**此处设置代理**
         options.addArguments("no-sandbox");
 
         // 隧道域名: 端口号

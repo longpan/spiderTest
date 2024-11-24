@@ -8,7 +8,6 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
-import org.springframework.beans.factory.annotation.Autowired;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Request;
 import us.codecraft.webmagic.Site;
@@ -21,6 +20,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Created by apple on 2018/8/29.
@@ -95,6 +95,7 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
     public Page download(Request request, Task task) {
         checkInit();
         WebDriver webDriver;
+        Random random = new Random();
         try {
             webDriver = webDriverPool.get();
         } catch (InterruptedException e) {
@@ -102,21 +103,12 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
         }
         webDriver.get(request.getUrl());
                                                         //v2.s.2pT8N8wRrXYfWO_VIROZjt6GMGlzyzKQZLlh3uNpwDFBxQVg
-        /*Cookie cookie1 = new Cookie("sid", "v2.s.J1jWox3y3NdLscr8gi9kqwPjHa25DsMbXIARb3ngQ4UmFc-w");
-                                                                        // eWQuNDI0NThlOTBjYzE4NDFiNTlAMTYzLmNvbSRlOTFkNjBmZTg1MWExODlhMTA4YjMwZjBjOGYwZWQyOQ==
-        Cookie cookie2 = new Cookie("urs_share_login_token_h5", "eWQuNDI0NThlOTBjYzE4NDFiNTlAMTYzLmNvbSRlOTFkNjBmZTg1MWExODlhMTA4YjMwZjBjOGYwZWQyOQ==");
-        Cookie cookie3 = new Cookie("urs_share_login_token", "eWQuNDI0NThlOTBjYzE4NDFiNTlAMTYzLmNvbSRlOTFkNjBmZTg1MWExODlhMTA4YjMwZjBjOGYwZWQyOQ==");
 
-        webDriver.manage().addCookie(cookie1);
-        webDriver.manage().addCookie(cookie2);
-        webDriver.manage().addCookie(cookie3);
-        webDriver.manage().addCookie(new Cookie("is_log_active_stat","1"));
-        webDriver.navigate().refresh();*/
 
-            //将页面滚动条拖到底部
+        //将页面滚动条拖到底部
             int step = 13000;
             int start_y = 500;
-
+            Actions actions = new Actions(webDriver);
             for (int index = 0; index < appConfigFromPost.getMaxPullDownCount(); index ++) {
                 int postion_y = start_y + step * index;
                 ((JavascriptExecutor)webDriver).executeScript("window.scrollTo(0," + postion_y + ");");
@@ -124,7 +116,13 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
                 //actions.click().build().perform();
                 try {
                     System.out.println(index);
-                    Thread.sleep(appConfigFromPost.getPullDownSleepTimeMillis());
+                    Thread.sleep(appConfigFromPost.getPullDownSleepTimeMillis() + random.nextInt(2000));
+
+                    if(StringUtils.contains(webDriver.getCurrentUrl(), "show_login")){
+                        Thread.sleep(1000*60*60);
+                        //doLoginV2(webDriver, random);
+                    }
+
                     System.out.println(webDriver.findElements(By.className("info-wrap")).size());
                     if(webDriver.findElements(By.className("info-wrap")).size() > appConfigFromPost.getMaxItemCount()) {
                         break;
@@ -176,7 +174,7 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
 //        System.out.println("size == " + itemList.size());
 
 
-        Actions actions = new Actions(webDriver);
+       // Actions actions = new Actions(webDriver);
 
         try {
             WebElement btnCloseElement = webDriver.findElement(By.className("btn-close"));
@@ -208,20 +206,27 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
                 CbgItem cbgItem = new CbgItem();
 
 
-                //点击进入详情页面
-                actions.click(itemElement).build().perform();
-                Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis());
-                String detail = webDriver.getCurrentUrl();
-                System.out.println(detail);
-                System.out.println(index);
-                index++;
-                cbgItem.setDetailUrl(detail);
-
-                if(StringUtils.contains(detail, "show_login")){
-                    break;
+                if(StringUtils.contains( webDriver.getCurrentUrl(), "cgi/mweb/?")){
+                    //点击进入详情页面
+                    actions.click(itemElement).build().perform();
+                    Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis() + random.nextInt(2000));
                 }
 
-                    if(StringUtils.contains(detail, "equip")) {
+                String detailUrl = webDriver.getCurrentUrl();
+                System.out.println(detailUrl);
+                System.out.println(index);
+                index++;
+                cbgItem.setDetailUrl(detailUrl);
+                if(StringUtils.contains(detailUrl, "cgi/activity")){
+                    webDriver.navigate().back();
+                }
+
+                if(StringUtils.contains(detailUrl, "show_login")){
+                    Thread.sleep(1000*60*60);
+                    //doLoginV2(webDriver, random);
+                }
+
+                    if(StringUtils.contains(detailUrl, "equip")) {
 
                     //解析详情页面
                     cbgItem.setCode(webDriver.findElement(By.className("pageProductDetail")).getAttribute("ordersn"));
@@ -279,7 +284,8 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
                     if(StringUtils.isEmpty(cbgItem.getWrapName())) {
                         emptyNumbers ++;
                         System.out.println("emptyNumbers : " + emptyNumbers);
-
+                        //跳转回列表
+                        jumpToList(webDriver, random, actions);
                         continue;
                     }
 
@@ -293,14 +299,12 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
 
 
                     //跳转回列表
-                    WebElement btnBackElement = webDriver.findElement(By.className("iff-icon-back"));
-                    actions.click(btnBackElement).build().perform();
-
-                    Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis());
-                }
+                        jumpToList(webDriver, random, actions);
+                    }
             }catch (Exception e) {
                 System.out.println(e.getMessage());
-                break;
+                e.printStackTrace();
+                continue;
             }
 
 
@@ -311,6 +315,50 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
 
         webDriverPool.returnToPool(webDriver);
         return page;
+    }
+
+    private void doLoginV2(WebDriver webDriver, Random random) throws InterruptedException {
+        Cookie cookie1 = new Cookie("sid", "v2.s.t0QQedS4YQ_etKXXwmm91KJdh4myKm90xyng1rv-eZ6p-YX8");
+        // eWQuNDI0NThlOTBjYzE4NDFiNTlAMTYzLmNvbSRlOTFkNjBmZTg1MWExODlhMTA4YjMwZjBjOGYwZWQyOQ==
+        Cookie cookie2 = new Cookie("urs_share_login_token_h5", "eWQuNDI0NThlOTBjYzE4NDFiNTlAMTYzLmNvbSRlOTFkNjBmZTg1MWExODlhMTA4YjMwZjBjOGYwZWQyOQ==");
+        Cookie cookie3 = new Cookie("urs_share_login_token", "eWQuNDI0NThlOTBjYzE4NDFiNTlAMTYzLmNvbSRlOTFkNjBmZTg1MWExODlhMTA4YjMwZjBjOGYwZWQyOQ==");
+
+        webDriver.manage().addCookie(cookie1);
+        webDriver.manage().addCookie(cookie2);
+        webDriver.manage().addCookie(cookie3);
+        webDriver.manage().addCookie(new Cookie("is_log_active_stat","1"));
+        webDriver.navigate().refresh();
+        Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis() + random.nextInt(2000));
+
+    }
+
+
+    private void doLogin(WebDriver webDriver, Random random, Actions actions) throws InterruptedException {
+        webDriver.switchTo().frame(webDriver.findElement(By.xpath("//iframe")).getAttribute("id"));
+        WebElement mailModuleElement = webDriver.findElement(By.id("mailModule"));
+        actions.click(mailModuleElement).build().perform();
+        Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis() + random.nextInt(2000));
+
+        //设置账号
+        webDriver.findElement(By.className("dlemail")).sendKeys("gbk2024001@163.com");
+        //设置密码
+        webDriver.findElement(By.className("dlpwd")).sendKeys("Gbk19940411");
+
+        //点击提交
+        WebElement loginElement = webDriver.findElement(By.id("dologin"));
+        actions.click(loginElement).build().perform();
+        Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis() + random.nextInt(2000));
+        // webDriver.switchTo().defaultContent();
+        Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis() + random.nextInt(2000));
+//                    break;
+    }
+
+    //跳转回列表
+    private void jumpToList(WebDriver webDriver, Random random, Actions actions) throws InterruptedException {
+        WebElement btnBackElement = webDriver.findElement(By.className("iff-icon-back"));
+        actions.click(btnBackElement).build().perform();
+
+        Thread.sleep(appConfigFromPost.getGetDetailUrlSleepTimeMillis() + random.nextInt(2000));
     }
 
     private void checkInit() {
