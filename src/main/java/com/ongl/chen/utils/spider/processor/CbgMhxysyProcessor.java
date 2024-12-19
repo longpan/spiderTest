@@ -40,18 +40,11 @@ import java.util.Map;
 * @date 2018年8月15日
 *
 */
-@Component
 public class CbgMhxysyProcessor implements PageProcessor {
 
     private Site site = Site.me().setRetryTimes(3).setSleepTime(100);
 
-    public static final String URL_ITEM_LIST = "https://search.jd.com/Search\\?";
 
-    public static final String URL_INDEX2 = "https://channel.jd.com/\\d{4}-\\d{4}.html";
-
-    public static final String URL_DETAIL = "https://blog.csdn.net/\\w+/article/details/\\w+";
-
-    public static final String URL_INDEX = "https://baby.jd.com/";
 
     public static HashMap<String, String> typeMap = new HashMap<String, String>();
 
@@ -65,6 +58,7 @@ public class CbgMhxysyProcessor implements PageProcessor {
     CbgItemExcelPipline cbgItemExcelPipline;
 
 
+
     public void process(Page page) {
 
             System.out.println("item list");
@@ -75,7 +69,7 @@ public class CbgMhxysyProcessor implements PageProcessor {
             System.out.println("size == " + itemList.size());
 
             for( Selectable item: itemList) {
-                String wrapName = item.$(".name-wrap").xpath("//span[@class='name']/text()").toString();
+                String wrapName = item.$(".name-wrap").xpath("span[@class='name']/text()").toString();
                 String level = item.xpath("//span[@class='level']/text()").toString();
                 String serverName = item.xpath("//span[@class='server-name']/text()").toString();
                 String overallScore = item.xpath("//span[@class='basic_attrs_item'][1]/text()").toString();

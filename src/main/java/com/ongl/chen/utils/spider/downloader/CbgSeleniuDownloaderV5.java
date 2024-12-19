@@ -119,7 +119,10 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
                     Thread.sleep(appConfigFromPost.getPullDownSleepTimeMillis() + random.nextInt(2000));
 
                     if(StringUtils.contains(webDriver.getCurrentUrl(), "show_login")){
+                        System.out.println("需要登录。。。。。。。。： " + webDriver.getCurrentUrl());
+
                         Thread.sleep(1000*60*60);
+
                         //doLoginV2(webDriver, random);
                     }
 
@@ -222,6 +225,7 @@ public class CbgSeleniuDownloaderV5 implements Downloader, Closeable {
                 }
 
                 if(StringUtils.contains(detailUrl, "show_login")){
+                    System.out.println("需要登录。。。。。。。。： " + webDriver.getCurrentUrl());
                     Thread.sleep(1000*60*60);
                     //doLoginV2(webDriver, random);
                 }

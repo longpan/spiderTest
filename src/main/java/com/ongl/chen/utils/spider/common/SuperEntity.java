@@ -7,6 +7,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 
 import java.io.Serializable;
+import com.gitee.sunchenbin.mybatis.actable.annotation.Column;
+import com.gitee.sunchenbin.mybatis.actable.annotation.IsAutoIncrement;
+import com.gitee.sunchenbin.mybatis.actable.annotation.IsKey;
 
 /**
  * <p>
@@ -20,7 +23,13 @@ public class SuperEntity implements Serializable {
     /**
      * 用户ID
      */
-    @TableId(value = "id", type = IdType.AUTO)
+    @Column(name = "id")
+    /**
+     * 主键
+     */
+    @TableId(type = IdType.AUTO) //mybatis-plus主键注解
+    @IsKey                         //actable主键注解
+    @IsAutoIncrement             //自增
     private Long id;
 
     public Long getId() {

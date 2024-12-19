@@ -18,7 +18,7 @@ spring:
 mybatis-plus:
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  mapper-locations: classpath*:mybatis/mapper/**/*Mapper.xml
+  mapper-locations: classpath*:mybatis/mapper/**/*Mapper.xml,com/gitee/sunchenbin/mybatis/actable/mapping/*/*.xml
   global-config:
     # 逻辑删除配置
     db-config:
@@ -26,6 +26,13 @@ mybatis-plus:
       logic-not-delete-value: 1
       # 删除后
       logic-delete-value: 0
+mybatis:
+  table:
+    auto: update  #update: 数据表实体类只要有变动，就会对数据表实施更改操作，包括删除表、新增表、更新表字段等。
+  model:
+    pack: com.ongl.chen.utils.spider.beans.cbg,com.ongl.chen.utils.spider.beans  #扫描数据实体位置
+  database:
+    type: mysql  #数据库类型
 
 
 

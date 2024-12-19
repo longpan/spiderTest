@@ -5,7 +5,9 @@ import com.ongl.chen.utils.spider.beans.CbgItem;
 import com.ongl.chen.utils.spider.dao.CbgItemDAO;
 import com.ongl.chen.utils.spider.pipline.CbgItemExcelPipline;
 import com.ongl.chen.utils.spider.processor.*;
+import com.ongl.chen.utils.spider.processor.cbg.CbgMhxyProcessor;
 import com.ongl.chen.utils.spider.service.CbgItemService;
+import com.ongl.chen.utils.spider.service.MhPetItemService;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +31,12 @@ public class RunnerController {
 
     @Autowired
     private CbgItemService cbgItemService;
+
+    @Autowired
+    private CbgMhxyProcessor cbgMhxyProcessor;
+
+    @Autowired
+    MhPetItemService mhPetItemService;
 
 
     @GetMapping("/gxrcw")
@@ -76,5 +84,23 @@ public class RunnerController {
         CbgItemExcelPipline.saveExcel(cbgItemList);
 //        cbgItemDAO.insert(cbgItem);
        // cbgItemService.insertByCode(cbgItem);
+    }
+
+    @PostMapping("/cgbPet")
+    public void cbgPet(@RequestBody AppConfigFromPost appConfigFromPost) throws InterruptedException {
+        int cycleIndex = 1;
+        cbgMhxyProcessor.start(appConfigFromPost, mhPetItemService);
+//        while (true) {
+//            try {
+//                System.out.println("cbgMhxysyProcessorV5.start times: " + cycleIndex);
+//                cbgMhxyProcessor.start(appConfigFromPost, cbgItemService);
+//                Thread.sleep(60*1000*5);
+//            }catch (Exception e){
+//                System.out.println("RunnerController Exception, errMsg: " + e.getMessage());
+//            }
+
+
+//        }
+
     }
 }
