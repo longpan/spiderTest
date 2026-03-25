@@ -14,6 +14,7 @@ import com.ongl.chen.utils.spider.downloader.CbgSeleniuDownloaderV4;
 import com.ongl.chen.utils.spider.downloader.CbgSeleniuDownloaderV5;
 import com.ongl.chen.utils.spider.pipline.CbgItemExcelPipline;
 import com.ongl.chen.utils.spider.service.CbgItemService;
+import com.ongl.chen.utils.spider.service.CbgValuationService;
 import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
 import com.ongl.chen.utils.spider.utils.ConstantUtils;
@@ -42,6 +43,9 @@ public class CbgMhxysyProcessorV5 implements PageProcessor {
 
     @Autowired
     private AppConfig appConfig;
+
+    @Autowired
+    private CbgValuationService cbgValuationService;
 
     @Autowired
     CbgItemExcelPipline cbgItemExcelPipline;
@@ -92,6 +96,11 @@ public class CbgMhxysyProcessorV5 implements PageProcessor {
                 cbgItem.setBargin(bargin);
                 cbgItem.setPublicity(publicity);
 //                cbgItem.setDetailUrl(detailUrl);
+
+                // AI 智能数据价值挖掘：计算估值与性价比评分
+                if (cbgValuationService != null) {
+                    cbgValuationService.valuate(cbgItem);
+                }
 
                 cbgItemList.add(cbgItem);
             }

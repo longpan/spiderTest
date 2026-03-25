@@ -55,6 +55,14 @@ public class CbgItem extends SuperEntity {
     @ExcelProperty("链接")
     String detailUrl;
 
+    @TableField(value = "valuation_value")
+    @ExcelProperty("AI估值")
+    Double valuationValue;
+
+    @TableField(value = "valuation_score")
+    @ExcelProperty("性价比评分")
+    Double valuationScore;
+
 
 
     public String getWrapName() {
@@ -167,5 +175,21 @@ public class CbgItem extends SuperEntity {
 
     public void setDraw(String draw) {
         this.draw = draw;
+    }
+
+    public Double getValuationValue() {
+        return valuationValue;
+    }
+
+    public void setValuationValue(Double valuationValue) {
+        this.valuationValue = valuationValue;
+    }
+
+    public Double getValuationScore() {
+        return valuationScore;
+    }
+
+    public void setValuationScore(Double valuationScore) {
+        this.valuationScore = valuationScore;
     }
 }
