@@ -114,13 +114,20 @@ public class MyWebDriverPool {
         cliArgsCap.add("--ssl-protocol=any");
         cliArgsCap.add("--ignore-ssl-errors=true");
 
+
+        //options
+
         ChromeOptions options = new ChromeOptions();
         options.addArguments("test-type"); //ignore certificate errors
-        //options.addArguments("headless");// headless mode
+        options.addArguments("headless");// headless mode
         options.addArguments("disable-gpu");
 
         options.addArguments("disable-dev-shm-usage");
         options.addArguments("disable-plugins");
+
+        options.addArguments("--window-size=1920,1050");
+        options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36");
+
         String host = "y843.kdltps.com";
         int port = 15818;
         String proxyServer = "y843.kdltps.com:15818";

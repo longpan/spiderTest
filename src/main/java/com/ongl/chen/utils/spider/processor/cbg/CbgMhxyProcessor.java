@@ -18,6 +18,7 @@ import com.ongl.chen.utils.spider.service.CbgItemService;
 import com.ongl.chen.utils.spider.service.MhPetItemService;
 import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
+import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
 import com.ongl.chen.utils.spider.utils.UrlStringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,19 +50,23 @@ public class CbgMhxyProcessor implements PageProcessor {
 
     MhPetItemService mhPetItemService;
 
+    AppConfigFromPostForCbg appConfigFromPostForCbg;
+
     String URL_INDEX = "https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet";
 
     private static final String pageParms = "page";
     private static final String keyWordPara = "keyword";
 
-    public CbgMhxyProcessor(MhPetItemService mhPetItemService) {
+    public CbgMhxyProcessor(MhPetItemService mhPetItemService, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         this.mhPetItemService = mhPetItemService;
+        this.appConfigFromPostForCbg = appConfigFromPostForCbg;
+        this.maxPageNum = appConfigFromPostForCbg.getMaxPage();
     }
 
     public CbgMhxyProcessor() {
     }
 
-    public static final int maxPageNum = 60; //100页
+    public int maxPageNum = 60; //100页
 
     public void process(Page page) {
 
@@ -153,31 +158,31 @@ public class CbgMhxyProcessor implements PageProcessor {
             mhPetItem.setMageDefence(mageDefence);
 
             //攻击资质
-            String attackQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[1]/td[1]/text()").toString();
+            String attackQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[1]/td[1]/span/text()").toString();
             mhPetItem.setAttackQualification(attackQualification);
             //寿命
             String lifetime = page.getHtml().$(".petZiZhiTb").xpath("//tr[1]/td[2]/text()").toString();
             mhPetItem.setLifetime(lifetime);
             //防御资质
-            String defenseQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[2]/td[1]/text()").toString();
+            String defenseQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[2]/td[1]/span/text()").toString();
             mhPetItem.setDefenseQualification(defenseQualification);
             //成长
             String growUp = page.getHtml().$(".petZiZhiTb").xpath("//tr[2]/td[2]/text()").toString();
             mhPetItem.setGrowUp(growUp);
             //体力资质
-            String physicalQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[3]/td[1]/text()").toString();
+            String physicalQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[3]/td[1]/span/text()").toString();
             mhPetItem.setPhysicalQualification(physicalQualification);
             //法力资质
-            String manaQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[4]/td[1]/text()").toString();
+            String manaQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[4]/td[1]/span/text()").toString();
             mhPetItem.setManaQualification(manaQualification);
             //速度资质
-            String speedQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[5]/td[1]/text()").toString();
+            String speedQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[5]/td[1]/span/text()").toString();
             mhPetItem.setSpeedQualification(speedQualification);
             //躲闪资质
-            String dodgeQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[6]/td[1]/text()").toString();
+            String dodgeQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[6]/td[1]/span/text()").toString();
             mhPetItem.setDodgeQualification(dodgeQualification);
             //是否宝宝
-            String isBaby = page.getHtml().$(".petZiZhiTb").xpath("//tr[7]/td[1]/text()").toString();
+            String isBaby = page.getHtml().$(".petZiZhiTb").xpath("//tr[7]/td[1]/span/text()").toString();
             mhPetItem.setIsBaby(isBaby);
 
 
@@ -239,19 +244,20 @@ public class CbgMhxyProcessor implements PageProcessor {
         String chromeDriverPath = "/usr/local/bin/chromedriver";
 //        String chromeDriverPath = "/usr/bin/chromedriver";
        // Spider.create(new CbgMhxysyProcessor()).addUrl("https://my.cbg.163.com/cgi/mweb/pl?view_loc=equip_list&from=kingkong&tfid=f_kingkong&refer_sn=01933EA6-4505-655E-BD4F-92DF5539C411").setDownloader(new CbgSeleniuDownloader(chromeDriverPath)).thread(1).run();
-        Spider.create(new CbgMhxyProcessor(null)).addUrl("https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet").setDownloader(new CbgMhxySeleniuDownloader(chromeDriverPath)).thread(1).run();
+        Spider.create(new CbgMhxyProcessor(null, null)).addUrl("https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet").setDownloader(new CbgMhxySeleniuDownloader(chromeDriverPath, null)).thread(1).run();
 
     }
 
 
 
-    public void start(AppConfigFromPost appConfigFromPost, MhPetItemService mhPetItemService) {
+    public void start(AppConfigFromPostForCbg appConfigFromPost, MhPetItemService mhPetItemService) {
         System.setProperty("selenuim_config", appConfigFromPost.getSelenuimConfig());
         this.mhPetItemService = mhPetItemService;
         String chromeDriverPath = appConfigFromPost.getChromeDriverPath();
-        CbgMhxySeleniuDownloader seleniuDownloader = new CbgMhxySeleniuDownloader(chromeDriverPath);
+        this.appConfigFromPostForCbg = appConfigFromPost;
+        CbgMhxySeleniuDownloader seleniuDownloader = new CbgMhxySeleniuDownloader(chromeDriverPath, appConfigFromPost);
 
-        Spider.create(new CbgMhxyProcessor(mhPetItemService)).addUrl("https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet").setDownloader(seleniuDownloader).thread(1).run();
+        Spider.create(new CbgMhxyProcessor(mhPetItemService, appConfigFromPost)).addUrl(appConfigFromPost.getDetailUrl()).setDownloader(seleniuDownloader).thread(1).run();
 
        // Spider.create(new CbgMhxysyProcessor()).addUrl("https://my.cbg.163.com/cgi/mweb/pl?view_loc=equip_list&from=kingkong&tfid=f_kingkong&refer_sn=01933EA6-4505-655E-BD4F-92DF5539C411").addPipeline(cbgItemExcelPipline).setDownloader(new CbgSeleniuDownloader(chromeDriverPath)).thread(1).run();
     }

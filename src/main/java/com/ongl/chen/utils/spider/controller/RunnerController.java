@@ -5,10 +5,15 @@ import com.ongl.chen.utils.spider.beans.CbgItem;
 import com.ongl.chen.utils.spider.dao.CbgItemDAO;
 import com.ongl.chen.utils.spider.pipline.CbgItemExcelPipline;
 import com.ongl.chen.utils.spider.processor.*;
+import com.ongl.chen.utils.spider.processor.cbg.CbgMhxyEquipProcessor;
+import com.ongl.chen.utils.spider.processor.cbg.CbgMhxyLingShiProcessor;
 import com.ongl.chen.utils.spider.processor.cbg.CbgMhxyProcessor;
 import com.ongl.chen.utils.spider.service.CbgItemService;
+import com.ongl.chen.utils.spider.service.MhEquipItemService;
+import com.ongl.chen.utils.spider.service.MhLingShiItemService;
 import com.ongl.chen.utils.spider.service.MhPetItemService;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
+import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,8 +41,19 @@ public class RunnerController {
     private CbgMhxyProcessor cbgMhxyProcessor;
 
     @Autowired
+    private CbgMhxyLingShiProcessor cbgMhxyLingShiProcessor;
+
+    @Autowired
+    private CbgMhxyEquipProcessor cbgMhxyEquipProcessor;
+
+    @Autowired
     MhPetItemService mhPetItemService;
 
+    @Autowired
+    MhLingShiItemService mhLingShiItemService;
+
+    @Autowired
+    MhEquipItemService mhEquipItemService;
 
     @GetMapping("/gxrcw")
     public void gxrcw(@RequestParam(required = true) String keyWord) {
@@ -87,20 +103,18 @@ public class RunnerController {
     }
 
     @PostMapping("/cgbPet")
-    public void cbgPet(@RequestBody AppConfigFromPost appConfigFromPost) throws InterruptedException {
+    public void cbgPet(@RequestBody AppConfigFromPostForCbg appConfigFromPost) throws InterruptedException {
         int cycleIndex = 1;
         cbgMhxyProcessor.start(appConfigFromPost, mhPetItemService);
-//        while (true) {
-//            try {
-//                System.out.println("cbgMhxysyProcessorV5.start times: " + cycleIndex);
-//                cbgMhxyProcessor.start(appConfigFromPost, cbgItemService);
-//                Thread.sleep(60*1000*5);
-//            }catch (Exception e){
-//                System.out.println("RunnerController Exception, errMsg: " + e.getMessage());
-//            }
+    }
 
+    @PostMapping("/cgbLingShi")
+    public void cbgLingShi(@RequestBody AppConfigFromPostForCbg appConfigFromPost) throws InterruptedException {
+        cbgMhxyLingShiProcessor.start(appConfigFromPost, mhLingShiItemService);
+    }
 
-//        }
-
+    @PostMapping("/cgbEquip")
+    public void cbgEquip(@RequestBody AppConfigFromPostForCbg appConfigFromPost) throws InterruptedException {
+        cbgMhxyEquipProcessor.start(appConfigFromPost, mhEquipItemService);
     }
 }

@@ -11,7 +11,7 @@ import com.gitee.sunchenbin.mybatis.actable.annotation.Table;
 import java.util.Date;
 
 @TableName(value = "mh_pet_item")
-@Table(name = "mh_pet_item")
+//@Table(name = "mh_pet_item")
 public class MhPetItem extends SuperEntity {
 
     @TableField(value = "code")
@@ -51,11 +51,11 @@ public class MhPetItem extends SuperEntity {
 
 
     @TableField(value = "lightSpot1")
-    @Column(name = "lightSpot1",comment = "亮点1", length = 4096)
+    @Column(name = "lightSpot1",comment = "亮点1", length = 2048)
     String lightSpot1;
 
     @TableField(value = "lightSpot2")
-    @Column(name = "lightSpot2",comment = "亮点2", length = 4096)
+    @Column(name = "lightSpot2",comment = "亮点2", length = 2048)
     String lightSpot2;
 
     @TableField(value = "skillNum")
@@ -63,7 +63,7 @@ public class MhPetItem extends SuperEntity {
     int skillNum;
 
     @TableField(value = "skillList")
-    @Column(name = "skillList",comment = "技能列表", length = 4096)
+    @Column(name = "skillList",comment = "技能列表", length = 2048)
     String skillList;
 
     //气血
@@ -188,7 +188,7 @@ public class MhPetItem extends SuperEntity {
 
 
     @TableField(value = "detailUrl")
-    @Column(name = "detailUrl",comment = "链接",length = 4096)
+    @Column(name = "detailUrl",comment = "链接",length = 2048)
     @ExcelProperty("链接")
     String detailUrl;
 
