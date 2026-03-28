@@ -13,6 +13,7 @@ import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
 import com.ongl.chen.utils.spider.downloader.cbg.CbgMhxySeleniuDownloader;
 import com.ongl.chen.utils.spider.service.MhLingShiItemService;
 import com.ongl.chen.utils.spider.service.MhPetItemService;
+import com.ongl.chen.utils.spider.service.MhValuationService;
 import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
 import com.ongl.chen.utils.spider.utils.UrlStringUtil;
@@ -41,6 +42,9 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
 
     @Autowired
     private AppConfig appConfig;
+
+    @Autowired
+    private MhValuationService mhValuationService;
 
 
     MhLingShiItemService mhLingShiItemService;
@@ -120,6 +124,11 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
             mhLingShiItem.setAccessoryAttribute(accessoryAttribute);
             mhLingShiItem.setSpecialEffects(specialEffects);
             mhLingShiItem.setDetailUrl(pageUrl);
+
+            if (mhValuationService != null) {
+                mhValuationService.valuateLingShi(mhLingShiItem);
+            }
+
             mhLingShiItemService.insertOrUpdateByDetailUrl(mhLingShiItem);
 
 

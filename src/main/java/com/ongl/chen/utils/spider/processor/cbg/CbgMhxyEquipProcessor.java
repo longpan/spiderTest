@@ -11,6 +11,7 @@ package com.ongl.chen.utils.spider.processor.cbg;
 import com.ongl.chen.utils.spider.beans.dbg.MhEquipItem;
 import com.ongl.chen.utils.spider.downloader.cbg.CbgMhxySeleniuDownloader;
 import com.ongl.chen.utils.spider.service.MhEquipItemService;
+import com.ongl.chen.utils.spider.service.MhValuationService;
 import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
 import com.ongl.chen.utils.spider.utils.UrlStringUtil;
@@ -39,6 +40,9 @@ public class CbgMhxyEquipProcessor implements PageProcessor {
 
     @Autowired
     private AppConfig appConfig;
+
+    @Autowired
+    private MhValuationService mhValuationService;
 
 
     MhEquipItemService mhEquipItemService;
@@ -123,6 +127,11 @@ public class CbgMhxyEquipProcessor implements PageProcessor {
             mhEquipItem.setDetailUrl(pageUrl);
             mhEquipItem.setRunestones(runestones);
             mhEquipItem.setDescYellow(descYellow);
+            
+            if (mhValuationService != null) {
+                mhValuationService.valuateEquip(mhEquipItem);
+            }
+
             mhEquipItemService.insertOrUpdateByDetailUrl(mhEquipItem);
 
 

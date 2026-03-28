@@ -16,6 +16,7 @@ import com.ongl.chen.utils.spider.downloader.cbg.CbgMhxySeleniuDownloader;
 import com.ongl.chen.utils.spider.pipline.CbgItemExcelPipline;
 import com.ongl.chen.utils.spider.service.CbgItemService;
 import com.ongl.chen.utils.spider.service.MhPetItemService;
+import com.ongl.chen.utils.spider.service.MhValuationService;
 import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
@@ -47,6 +48,8 @@ public class CbgMhxyProcessor implements PageProcessor {
     @Autowired
     private AppConfig appConfig;
 
+    @Autowired
+    private MhValuationService mhValuationService;
 
     MhPetItemService mhPetItemService;
 
@@ -195,6 +198,11 @@ public class CbgMhxyProcessor implements PageProcessor {
             if(skillList != null) {
                 mhPetItem.setSkillList(skillList.toString());
             }
+
+            if (mhValuationService != null) {
+                mhValuationService.valuatePet(mhPetItem);
+            }
+
             mhPetItemService.insertOrUpdateByDetailUrl(mhPetItem);
 
 

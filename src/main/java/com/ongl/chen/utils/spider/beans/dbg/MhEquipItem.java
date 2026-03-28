@@ -100,6 +100,44 @@ public class MhEquipItem extends SuperEntity {
     @ExcelProperty("链接")
     String detailUrl;
 
+    @TableField(value = "valuationValue")
+    @Column(name = "valuationValue",comment = "估值")
+    @ExcelProperty("估值")
+    private Double valuationValue;
+
+    @TableField(value = "valuationScore")
+    @Column(name = "valuationScore",comment = "性价比")
+    @ExcelProperty("性价比")
+    private Double valuationScore;
+
+    @TableField(value = "txt")
+    @Column(name = "txt",comment = "评价", length = 2048)
+    @ExcelProperty("评价")
+    private String txt;
+
+    public Double getValuationValue() {
+        return valuationValue;
+    }
+
+    public void setValuationValue(Double valuationValue) {
+        this.valuationValue = valuationValue;
+    }
+
+    public Double getValuationScore() {
+        return valuationScore;
+    }
+
+    public void setValuationScore(Double valuationScore) {
+        this.valuationScore = valuationScore;
+    }
+
+    public String getTxt() {
+        return txt;
+    }
+
+    public void setTxt(String txt) {
+        this.txt = txt;
+    }
 
     public String getCode() {
         return code;

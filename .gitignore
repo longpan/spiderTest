@@ -6,3 +6,13 @@
 /.idea/*
 /target/
 .idea/*
+.DS_Store
+*.class
+*.log
+*.lock
+ai_service/__pycache__/
+ai_service/.venv/
+ai_service/train_data/*.csv
+# 模型文件较大，建议使用 Git LFS 或单独存储，但此处尝试提交
+# ai_service/train_model/*.pkl
+
