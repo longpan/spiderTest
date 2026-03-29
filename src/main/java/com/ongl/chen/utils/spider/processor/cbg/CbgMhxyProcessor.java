@@ -8,9 +8,7 @@
 */
 package com.ongl.chen.utils.spider.processor.cbg;
 
-import com.ongl.chen.utils.spider.beans.CbgItem;
 import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
-import com.ongl.chen.utils.spider.downloader.CbgSeleniuDownloaderV3;
 import com.ongl.chen.utils.spider.downloader.CbgSeleniuDownloaderV5;
 import com.ongl.chen.utils.spider.downloader.cbg.CbgMhxySeleniuDownloader;
 import com.ongl.chen.utils.spider.pipline.CbgItemExcelPipline;
@@ -215,7 +213,6 @@ public class CbgMhxyProcessor implements PageProcessor {
     public String getNextPageUrl(String thisUrl) {
 
         Map<String, String> mapRequest = UrlStringUtil.URLRequest(thisUrl);
-        int pageNum = 1;
         if (mapRequest.containsKey(pageParms)) {
             String pageStr = mapRequest.get(pageParms);
             int page = Integer.parseInt(pageStr);
@@ -260,6 +257,7 @@ public class CbgMhxyProcessor implements PageProcessor {
 
     public void start(AppConfigFromPostForCbg appConfigFromPost, MhPetItemService mhPetItemService) {
         System.setProperty("selenuim_config", appConfigFromPost.getSelenuimConfig());
+        System.setProperty("headless", String.valueOf(appConfigFromPost.isHeadlessMode()));
         this.mhPetItemService = mhPetItemService;
         String chromeDriverPath = appConfigFromPost.getChromeDriverPath();
         this.appConfigFromPostForCbg = appConfigFromPost;

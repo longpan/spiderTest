@@ -86,9 +86,6 @@ public class MhPetItem extends SuperEntity {
     public void setTxt(String txt) {
         this.txt = txt;
     }
-}
-
-
 
     @TableField(value = "lightSpot1")
     @Column(name = "lightSpot1",comment = "亮点1", length = 2048)

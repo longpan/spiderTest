@@ -75,11 +75,11 @@
 
 
 
-    <!--mysql数据库驱动 -->
+    <!-- mysql数据库驱动 -->
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.13</version>
+      <version>8.0.28</version>
         <scope>runtime</scope>
     </dependency>
 
@@ -89,13 +89,6 @@
           <version>1.1.1.RELEASE</version>
       </dependency>
 
-    
-    <!-- JUnit单元测试工具 -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-    </dependency>
     <!--c3p0 连接池 -->
     <dependency>
       <groupId>c3p0</groupId>

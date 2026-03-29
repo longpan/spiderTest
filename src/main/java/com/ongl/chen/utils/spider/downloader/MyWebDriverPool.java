@@ -119,7 +119,16 @@ public class MyWebDriverPool {
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("test-type"); //ignore certificate errors
-        options.addArguments("headless");// headless mode
+        
+        // 根据系统属性判断是否开启无头模式，默认不开启以方便调试
+        String headless = System.getProperty("headless");
+        if ("true".equalsIgnoreCase(headless)) {
+            options.addArguments("headless");// headless mode
+            System.out.println("Chrome is running in HEADLESS mode.");
+        } else {
+            System.out.println("Chrome is running in NORMAL mode (GUI).");
+        }
+        
         options.addArguments("disable-gpu");
 
         options.addArguments("disable-dev-shm-usage");

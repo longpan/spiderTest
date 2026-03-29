@@ -38,8 +38,6 @@ public class CbgMhxyEquipProcessor implements PageProcessor {
 
     private Site site = Site.me().setRetryTimes(3).setSleepTime(100);
 
-    @Autowired
-    private AppConfig appConfig;
 
     @Autowired
     private MhValuationService mhValuationService;
@@ -52,7 +50,6 @@ public class CbgMhxyEquipProcessor implements PageProcessor {
     String URL_INDEX = "https://xyq.cbg.163.com/cgi-bin/query.py?act=search_role_equip";
 
     private static final String pageParms = "page";
-    private static final String keyWordPara = "keyword";
 
     public CbgMhxyEquipProcessor(MhEquipItemService mhEquipItemService, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         this.mhEquipItemService = mhEquipItemService;
@@ -144,7 +141,6 @@ public class CbgMhxyEquipProcessor implements PageProcessor {
     public String getNextPageUrl(String thisUrl) {
 
         Map<String, String> mapRequest = UrlStringUtil.URLRequest(thisUrl);
-        int pageNum = 1;
         if (mapRequest.containsKey(pageParms)) {
             String pageStr = mapRequest.get(pageParms);
             int page = Integer.parseInt(pageStr);
@@ -189,6 +185,7 @@ public class CbgMhxyEquipProcessor implements PageProcessor {
 
     public void start(AppConfigFromPostForCbg appConfigFromPost, MhEquipItemService mhEquipItemService) {
         System.setProperty("selenuim_config", appConfigFromPost.getSelenuimConfig());
+        System.setProperty("headless", String.valueOf(appConfigFromPost.isHeadlessMode()));
         this.mhEquipItemService = mhEquipItemService;
         String chromeDriverPath = appConfigFromPost.getChromeDriverPath();
         this.appConfigFromPostForCbg = appConfigFromPost;

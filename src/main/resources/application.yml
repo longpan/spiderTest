@@ -6,9 +6,9 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://123.56.236.150:3306/spider?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://150.158.130.52:3306/spider?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: Pyclmj214610
+    password: qwer@1234
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -37,10 +37,10 @@ mybatis:
 
 
 selenuim:
-  config: /Users/onglchen/proenv/selenium/config.ini
+  config: config.ini
 chrome:
   driver:
-    path: /usr/local/bin/chromedriver
+    path: chromedriver.exe
 
 max:
   pull-down-count: 10

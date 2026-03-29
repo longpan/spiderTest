@@ -9,10 +9,8 @@
 package com.ongl.chen.utils.spider.processor.cbg;
 
 import com.ongl.chen.utils.spider.beans.dbg.MhLingShiItem;
-import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
 import com.ongl.chen.utils.spider.downloader.cbg.CbgMhxySeleniuDownloader;
 import com.ongl.chen.utils.spider.service.MhLingShiItemService;
-import com.ongl.chen.utils.spider.service.MhPetItemService;
 import com.ongl.chen.utils.spider.service.MhValuationService;
 import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
@@ -40,8 +38,6 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
 
     private Site site = Site.me().setRetryTimes(3).setSleepTime(100);
 
-    @Autowired
-    private AppConfig appConfig;
 
     @Autowired
     private MhValuationService mhValuationService;
@@ -54,7 +50,6 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
     String URL_INDEX = "https://xyq.cbg.163.com/cgi-bin/query.py?act=search_lingshi";
 
     private static final String pageParms = "page";
-    private static final String keyWordPara = "keyword";
 
     public CbgMhxyLingShiProcessor(MhLingShiItemService mhLingShiItemService, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         this.mhLingShiItemService = mhLingShiItemService;
@@ -141,7 +136,6 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
     public String getNextPageUrl(String thisUrl) {
 
         Map<String, String> mapRequest = UrlStringUtil.URLRequest(thisUrl);
-        int pageNum = 1;
         if (mapRequest.containsKey(pageParms)) {
             String pageStr = mapRequest.get(pageParms);
             int page = Integer.parseInt(pageStr);
@@ -186,6 +180,7 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
 
     public void start(AppConfigFromPostForCbg appConfigFromPost, MhLingShiItemService mhLingShiItemService) {
         System.setProperty("selenuim_config", appConfigFromPost.getSelenuimConfig());
+        System.setProperty("headless", String.valueOf(appConfigFromPost.isHeadlessMode()));
         this.mhLingShiItemService = mhLingShiItemService;
         String chromeDriverPath = appConfigFromPost.getChromeDriverPath();
         this.appConfigFromPostForCbg = appConfigFromPost;

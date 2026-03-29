@@ -104,7 +104,6 @@ public class RunnerController {
 
     @PostMapping("/cgbPet")
     public void cbgPet(@RequestBody AppConfigFromPostForCbg appConfigFromPost) throws InterruptedException {
-        int cycleIndex = 1;
         cbgMhxyProcessor.start(appConfigFromPost, mhPetItemService);
     }
 

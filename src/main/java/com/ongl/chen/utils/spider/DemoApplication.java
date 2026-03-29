@@ -3,7 +3,9 @@ package com.ongl.chen.utils.spider;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @MapperScan({"com.gitee.sunchenbin.mybatis.actable.dao.*","com.ongl.chen.utils.spider.dao"})
@@ -13,6 +15,11 @@ public class DemoApplication {
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
 
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 
 }
