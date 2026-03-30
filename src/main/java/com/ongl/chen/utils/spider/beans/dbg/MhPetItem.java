@@ -28,6 +28,11 @@ public class MhPetItem extends SuperEntity {
     @ExcelProperty("等级")
     String level ;
 
+    @TableField(value = "area")
+    @Column(name = "area",comment = "大区")
+    @ExcelProperty("大区")
+    String area;
+
     @TableField(value = "serverName")
     @Column(name = "serverName",comment = "服务器")
     @ExcelProperty("服务器")
@@ -235,6 +240,14 @@ public class MhPetItem extends SuperEntity {
 
     public void setLevel(String level) {
         this.level = level;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
     }
 
     public String getServerName() {

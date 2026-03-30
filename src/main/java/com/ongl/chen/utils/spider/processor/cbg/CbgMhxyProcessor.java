@@ -111,6 +111,17 @@ public class CbgMhxyProcessor implements PageProcessor {
         }
         if(StringUtils.contains(pageUrl, "xyq.cbg.163.com/equip?")) {
             MhPetItem mhPetItem = new MhPetItem();
+
+            // 解析大区和服务器
+            String serverInfo = page.getHtml().xpath("//div[@class='userInfo']/p[1]/text()").toString();
+            if (StringUtils.isNotBlank(serverInfo) && serverInfo.contains("->")) {
+                String[] parts = serverInfo.split("->");
+                if (parts.length >= 2) {
+                    mhPetItem.setArea(parts[0].trim());
+                    mhPetItem.setServerName(parts[1].trim());
+                }
+            }
+
             List<Selectable> infoList = page.getHtml().$(".infoList").nodes().get(0).xpath("li").nodes();
            String nameStr =  page.getHtml().$(".names").xpath("li/text()").toString();
             String name = StringUtils.split(nameStr, " ")[0];

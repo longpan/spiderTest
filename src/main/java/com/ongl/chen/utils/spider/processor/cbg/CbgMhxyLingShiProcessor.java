@@ -109,6 +109,16 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
         if(StringUtils.contains(pageUrl, "xyq.cbg.163.com/equip?")) {
             MhLingShiItem mhLingShiItem = new MhLingShiItem();
 
+            // 解析大区和服务器
+            String serverInfo = page.getHtml().xpath("//div[@class='userInfo']/p[1]/text()").toString();
+            if (StringUtils.isNotBlank(serverInfo) && serverInfo.contains("->")) {
+                String[] parts = serverInfo.split("->");
+                if (parts.length >= 2) {
+                    mhLingShiItem.setArea(parts[0].trim());
+                    mhLingShiItem.setServerName(parts[1].trim());
+                }
+            }
+
             String primeAttribute = page.getHtml().xpath("p[@id='equip_desc_panel']/span[@class='equip_desc_yellow']/text()").toString();
             List<String> accessoryAttributeList = page.getHtml().xpath("//p[@id='equip_desc_panel']/span[@class='equip_desc_green']/text()").all();
             int accessoryAttributeNum = accessoryAttributeList.size();
