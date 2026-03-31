@@ -74,6 +74,8 @@ public class CbgMhxyProcessor implements PageProcessor {
 
     public int maxPageNum = 60; //100页
 
+    private volatile Spider currentSpider;
+
     public void process(Page page) {
 
         String pageUrl = page.getUrl().toString();
@@ -277,12 +279,20 @@ public class CbgMhxyProcessor implements PageProcessor {
         CbgMhxySeleniuDownloader seleniuDownloader = new CbgMhxySeleniuDownloader(chromeDriverPath, appConfigFromPost);
 
         String detailUrl = StringUtils.strip(StringUtils.trim(appConfigFromPost.getDetailUrl()), "` ");
-        Spider.create(new CbgMhxyProcessor(mhPetItemService, appConfigFromPost))
+        currentSpider = Spider.create(new CbgMhxyProcessor(mhPetItemService, appConfigFromPost))
                 .addUrl(detailUrl)
                 .setDownloader(seleniuDownloader)
-                .thread(1)
-                .run();
+                .thread(1);
+        currentSpider.run();
+    }
 
-       // Spider.create(new CbgMhxysyProcessor()).addUrl("https://my.cbg.163.com/cgi/mweb/pl?view_loc=equip_list&from=kingkong&tfid=f_kingkong&refer_sn=01933EA6-4505-655E-BD4F-92DF5539C411").addPipeline(cbgItemExcelPipline).setDownloader(new CbgSeleniuDownloader(chromeDriverPath)).thread(1).run();
+    public void stop() {
+        try {
+            if (currentSpider != null) {
+                currentSpider.stop();
+                currentSpider.close();
+            }
+        } catch (Exception ignored) {
+        }
     }
 }

@@ -107,6 +107,10 @@ public class RunnerController {
         cbgMhxyProcessor.start(appConfigFromPost, mhPetItemService);
     }
 
+    @PostMapping("/stopPet")
+    public void stopPet() {
+        cbgMhxyProcessor.stop();
+    }
     @PostMapping("/cgbLingShi")
     public void cbgLingShi(@RequestBody AppConfigFromPostForCbg appConfigFromPost) throws InterruptedException {
         cbgMhxyLingShiProcessor.start(appConfigFromPost, mhLingShiItemService);
