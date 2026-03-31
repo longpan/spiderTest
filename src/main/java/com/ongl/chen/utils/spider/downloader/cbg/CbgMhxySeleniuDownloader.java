@@ -17,8 +17,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Random;
 
-import java.util.Random;
-
 /**
  * Created by apple on 2025/12/15.
  */
@@ -78,19 +76,46 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
             return null;
         }
         System.out.println("spider star .... startUrl = " + request.getUrl());
+        if (appConfigFromPostForCbg != null && StringUtils.isNotBlank(appConfigFromPostForCbg.getSid())) {
+            webDriver.get("https://xyq.cbg.163.com/");
+            doLogin(webDriver, appConfigFromPostForCbg);
+        }
         webDriver.get(request.getUrl());
 
         String currentUrl = webDriver.getCurrentUrl();
+        String title = "";
+        try {
+            title = webDriver.getTitle();
+        } catch (Exception e) {
+        }
         System.out.println("currentUrl = " + currentUrl);
+        if (StringUtils.contains(request.getUrl(), "cgi-bin/query.py") && (StringUtils.equals(currentUrl, "https://xyq.cbg.163.com/") || StringUtils.equals(currentUrl, "https://xyq.cbg.163.com"))) {
+            System.out.println("redirect_to_home title = " + title);
+            throw new RuntimeException("redirect_to_home");
+        }
         if(!StringUtils.equals(request.getUrl(), currentUrl)) {
-            doLogin(webDriver, appConfigFromPostForCbg);
+            if (appConfigFromPostForCbg != null) {
+                doLogin(webDriver, appConfigFromPostForCbg);
+            }
             webDriver.navigate().refresh();
             webDriver.navigate().to(request.getUrl());
+            currentUrl = webDriver.getCurrentUrl();
+            try {
+                title = webDriver.getTitle();
+            } catch (Exception e) {
+            }
+            System.out.println("currentUrl_after_login = " + currentUrl);
+            if (StringUtils.contains(request.getUrl(), "cgi-bin/query.py") && (StringUtils.equals(currentUrl, "https://xyq.cbg.163.com/") || StringUtils.equals(currentUrl, "https://xyq.cbg.163.com"))) {
+                System.out.println("redirect_to_home_after_login title = " + title);
+                throw new RuntimeException("redirect_to_home_after_login");
+            }
         }
 
-        if(StringUtils.contains(currentUrl, "https://xyq.cbg.163.com/cgi-bin/login.py?act=show_mbauth")) {
-            System.out.println("需要重新认证，退出本次请求.......");
-            throw new RuntimeException("需要认证");
+        if(StringUtils.contains(currentUrl, "act=show_mbauth")
+                || StringUtils.contains(currentUrl, "act=show_anon_auth_page")
+                || StringUtils.contains(currentUrl, "/cgi-bin/login.py")) {
+            System.out.println("当前页面需要认证，退出本次请求: " + currentUrl);
+            throw new RuntimeException("需要认证: " + currentUrl);
         }
 
         try {
@@ -163,4 +188,3 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
         webDriverPool.closeAll();
     }
 }
-

@@ -196,7 +196,8 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
         this.appConfigFromPostForCbg = appConfigFromPost;
         CbgMhxySeleniuDownloader seleniuDownloader = new CbgMhxySeleniuDownloader(chromeDriverPath, appConfigFromPost);
 
-        Spider.create(new CbgMhxyLingShiProcessor(mhLingShiItemService, appConfigFromPost)).addUrl(appConfigFromPost.getDetailUrl()).setDownloader(seleniuDownloader).thread(1).run();
+        String detailUrl = StringUtils.strip(StringUtils.trim(appConfigFromPost.getDetailUrl()), "` ");
+        Spider.create(new CbgMhxyLingShiProcessor(mhLingShiItemService, appConfigFromPost)).addUrl(detailUrl).setDownloader(seleniuDownloader).thread(1).run();
 
        // Spider.create(new CbgMhxysyProcessor()).addUrl("https://my.cbg.163.com/cgi/mweb/pl?view_loc=equip_list&from=kingkong&tfid=f_kingkong&refer_sn=01933EA6-4505-655E-BD4F-92DF5539C411").addPipeline(cbgItemExcelPipline).setDownloader(new CbgSeleniuDownloader(chromeDriverPath)).thread(1).run();
     }
