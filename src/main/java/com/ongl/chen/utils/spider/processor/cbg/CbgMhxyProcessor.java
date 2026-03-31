@@ -27,6 +27,9 @@ import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
 import us.codecraft.webmagic.selector.Selectable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +61,8 @@ public class CbgMhxyProcessor implements PageProcessor {
     private static final String pageParms = "page";
     private static final String keyWordPara = "keyword";
 
+    private final Set<String> seenDetailUrls = Collections.synchronizedSet(new HashSet<>());
+
     public CbgMhxyProcessor(MhPetItemService mhPetItemService, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         this.mhPetItemService = mhPetItemService;
         this.appConfigFromPostForCbg = appConfigFromPostForCbg;
@@ -78,6 +83,9 @@ public class CbgMhxyProcessor implements PageProcessor {
             for (Selectable petSelectable : petList) {
 
                String detailUrl =  petSelectable.links().all().get(0);
+                if (StringUtils.isBlank(detailUrl) || !seenDetailUrls.add(detailUrl)) {
+                    continue;
+                }
                 String price = petSelectable.xpath("//td[5]/span/text()").toString();
                 List<Selectable> lightSpot1Selectable =   petSelectable.xpath("//td[3]/a").nodes();
                 String lightSpot1Temp = "";
@@ -94,14 +102,6 @@ public class CbgMhxyProcessor implements PageProcessor {
                 System.out.println("price = " + price);
                 System.out.println("lightSpot1Temp = " + lightSpot1Temp);
                 System.out.println("lightSpot2Temp = " + lightSpot2Temp);
-
-                MhPetItem mhPetItem = new MhPetItem();
-                mhPetItem.setDetailUrl(detailUrl);
-                mhPetItem.setPrice(price);
-                mhPetItem.setCollect(collect);
-                mhPetItem.setLightSpot1(lightSpot1Temp);
-                mhPetItem.setLightSpot2(lightSpot2Temp);
-                mhPetItemService.insertOrUpdateByDetailUrl(mhPetItem);
 
                 page.addTargetRequest(detailUrl);
             }
@@ -126,6 +126,8 @@ public class CbgMhxyProcessor implements PageProcessor {
            String nameStr =  page.getHtml().$(".names").xpath("li/text()").toString();
             String name = StringUtils.split(nameStr, " ")[0];
             String level = StringUtils.split(nameStr, " ")[1];
+            String code = page.getHtml().regex("编号：</strong>\\s*([0-9]+)", 1).toString();
+            mhPetItem.setCode(code);
             int skillNum = page.getHtml().$("#pet_skill_grid_con").xpath("//img").nodes().size();
             List<String> skillList = page.getHtml().$("#pet_skill_grid_con").xpath("//img/@data_store_name").all();
             System.out.println("petDetail page : " + pageUrl);
@@ -275,7 +277,11 @@ public class CbgMhxyProcessor implements PageProcessor {
         CbgMhxySeleniuDownloader seleniuDownloader = new CbgMhxySeleniuDownloader(chromeDriverPath, appConfigFromPost);
 
         String detailUrl = StringUtils.strip(StringUtils.trim(appConfigFromPost.getDetailUrl()), "` ");
-        Spider.create(new CbgMhxyProcessor(mhPetItemService, appConfigFromPost)).addUrl(detailUrl).setDownloader(seleniuDownloader).thread(1).run();
+        Spider.create(new CbgMhxyProcessor(mhPetItemService, appConfigFromPost))
+                .addUrl(detailUrl)
+                .setDownloader(seleniuDownloader)
+                .thread(1)
+                .run();
 
        // Spider.create(new CbgMhxysyProcessor()).addUrl("https://my.cbg.163.com/cgi/mweb/pl?view_loc=equip_list&from=kingkong&tfid=f_kingkong&refer_sn=01933EA6-4505-655E-BD4F-92DF5539C411").addPipeline(cbgItemExcelPipline).setDownloader(new CbgSeleniuDownloader(chromeDriverPath)).thread(1).run();
     }

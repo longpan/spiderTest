@@ -23,6 +23,9 @@ import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
 import us.codecraft.webmagic.selector.Selectable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.util.List;
 import java.util.Map;
@@ -51,6 +54,8 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
 
     private static final String pageParms = "page";
 
+    private final Set<String> seenDetailUrls = Collections.synchronizedSet(new HashSet<>());
+
     public CbgMhxyLingShiProcessor(MhLingShiItemService mhLingShiItemService, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         this.mhLingShiItemService = mhLingShiItemService;
         this.appConfigFromPostForCbg = appConfigFromPostForCbg;
@@ -71,6 +76,9 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
             for (Selectable petSelectable : petList) {
 
                String detailUrl =  petSelectable.links().all().get(0);
+                if (StringUtils.isBlank(detailUrl) || !seenDetailUrls.add(detailUrl)) {
+                    continue;
+                }
                 String price = petSelectable.xpath("//td[5]/span/text()").toString();
                 List<Selectable> lightSpot1Selectable =   petSelectable.xpath("//td[3]/a").nodes();
                 String lightSpot1Temp = "";
@@ -98,9 +106,10 @@ public class CbgMhxyLingShiProcessor implements PageProcessor {
                 mhLingShiItem.setLightSpot2(lightSpot2Temp);
                 mhLingShiItem.setName(name);
                 mhLingShiItem.setLevel(level);
-                mhLingShiItemService.insertOrUpdateByDetailUrl(mhLingShiItem);
-
-                page.addTargetRequest(detailUrl);
+                int insertRes = mhLingShiItemService.insertOrUpdateByDetailUrl(mhLingShiItem);
+                if (insertRes == 1) {
+                    page.addTargetRequest(detailUrl);
+                }
             }
             String nextPageUrl = getNextPageUrl(pageUrl);
             System.out.println("nextPageUrl : " + nextPageUrl);
