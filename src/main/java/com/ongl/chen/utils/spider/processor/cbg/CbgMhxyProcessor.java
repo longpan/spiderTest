@@ -84,7 +84,11 @@ public class CbgMhxyProcessor implements PageProcessor {
             List<Selectable> petList = page.getHtml().$("#soldList").xpath("tr").nodes();
             for (Selectable petSelectable : petList) {
 
-               String detailUrl =  petSelectable.links().all().get(0);
+                List<String> links = petSelectable.links().all();
+                if (links == null || links.isEmpty()) {
+                    continue;
+                }
+               String detailUrl =  StringUtils.strip(StringUtils.trim(links.get(0)), "` ");
                 if (StringUtils.isBlank(detailUrl) || !seenDetailUrls.add(detailUrl)) {
                     continue;
                 }
@@ -109,7 +113,9 @@ public class CbgMhxyProcessor implements PageProcessor {
             }
             String nextPageUrl = getNextPageUrl(pageUrl);
             System.out.println("nextPageUrl : " + nextPageUrl);
-            page.addTargetRequest(nextPageUrl);
+            if (StringUtils.isNotBlank(nextPageUrl)) {
+                page.addTargetRequest(nextPageUrl);
+            }
         }
         if(StringUtils.contains(pageUrl, "xyq.cbg.163.com/equip?")) {
             MhPetItem mhPetItem = new MhPetItem();
