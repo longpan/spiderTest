@@ -20,6 +20,7 @@ public class AppConfigFromPostForCbg {
 
     private String reco_sid;
 
+    private String loginMode;
 
 
     //获取详细链接睡眠时间（毫秒）
@@ -109,5 +110,13 @@ public class AppConfigFromPostForCbg {
 
     public void setReco_sid(String reco_sid) {
         this.reco_sid = reco_sid;
+    }
+
+    public String getLoginMode() {
+        return loginMode;
+    }
+
+    public void setLoginMode(String loginMode) {
+        this.loginMode = loginMode;
     }
 }

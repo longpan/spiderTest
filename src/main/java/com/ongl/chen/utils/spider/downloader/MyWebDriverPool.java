@@ -120,6 +120,15 @@ public class MyWebDriverPool {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("test-type"); //ignore certificate errors
         
+        String userDataDir = sConfig.getProperty("user_data_dir");
+        if (userDataDir != null && userDataDir.trim().length() > 0) {
+            options.addArguments("--user-data-dir=" + userDataDir.trim());
+        }
+        String profileDirectory = sConfig.getProperty("profile_directory");
+        if (profileDirectory != null && profileDirectory.trim().length() > 0) {
+            options.addArguments("--profile-directory=" + profileDirectory.trim());
+        }
+
         // 根据系统属性判断是否开启无头模式，默认不开启以方便调试
         String headless = System.getProperty("headless");
         if ("true".equalsIgnoreCase(headless)) {

@@ -76,7 +76,21 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
             return null;
         }
         System.out.println("spider star .... startUrl = " + request.getUrl());
-        if (appConfigFromPostForCbg != null && StringUtils.isNotBlank(appConfigFromPostForCbg.getSid())) {
+        String loginMode = appConfigFromPostForCbg != null ? appConfigFromPostForCbg.getLoginMode() : null;
+        if (loginMode == null || loginMode.trim().isEmpty()) {
+            loginMode = "auto";
+        } else {
+            loginMode = loginMode.trim().toLowerCase();
+        }
+
+        boolean hasCookieAuth = appConfigFromPostForCbg != null && StringUtils.isNotBlank(appConfigFromPostForCbg.getSid());
+        boolean useCookieAuth = "cookie".equals(loginMode) || ("auto".equals(loginMode) && hasCookieAuth);
+
+        if ("cookie".equals(loginMode) && !hasCookieAuth) {
+            throw new RuntimeException("loginMode=cookie but sid is blank");
+        }
+
+        if (useCookieAuth) {
             webDriver.get("https://xyq.cbg.163.com/");
             doLogin(webDriver, appConfigFromPostForCbg);
         }
@@ -94,7 +108,7 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
             throw new RuntimeException("redirect_to_home");
         }
         if(!StringUtils.equals(request.getUrl(), currentUrl)) {
-            if (appConfigFromPostForCbg != null) {
+            if (useCookieAuth) {
                 doLogin(webDriver, appConfigFromPostForCbg);
             }
             webDriver.navigate().refresh();
