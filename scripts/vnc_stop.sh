@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-pkill -9 x11vnc || true
-pkill -9 fluxbox || true
-pkill -9 Xvfb || true
-
-echo "VNC stopped"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "${SCRIPT_DIR}/vnc.sh" stop

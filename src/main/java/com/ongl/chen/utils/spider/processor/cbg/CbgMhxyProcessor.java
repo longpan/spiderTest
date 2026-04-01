@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Page;
+import us.codecraft.webmagic.Request;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
@@ -109,7 +110,12 @@ public class CbgMhxyProcessor implements PageProcessor {
                 System.out.println("lightSpot1Temp = " + lightSpot1Temp);
                 System.out.println("lightSpot2Temp = " + lightSpot2Temp);
 
-                page.addTargetRequest(detailUrl);
+                Request detailRequest = new Request(detailUrl);
+                detailRequest.putExtra("price", price);
+                detailRequest.putExtra("collect", collect);
+                detailRequest.putExtra("lightSpot1", lightSpot1Temp);
+                detailRequest.putExtra("lightSpot2", lightSpot2Temp);
+                page.addTargetRequest(detailRequest);
             }
             String nextPageUrl = getNextPageUrl(pageUrl);
             System.out.println("nextPageUrl : " + nextPageUrl);
@@ -206,6 +212,23 @@ public class CbgMhxyProcessor implements PageProcessor {
             //是否宝宝
             String isBaby = page.getHtml().$(".petZiZhiTb").xpath("//tr[7]/td[1]/span/text()").toString();
             mhPetItem.setIsBaby(isBaby);
+
+            Object priceExtra = page.getRequest() != null ? page.getRequest().getExtra("price") : null;
+            if (priceExtra != null) {
+                mhPetItem.setPrice(String.valueOf(priceExtra));
+            }
+            Object collectExtra = page.getRequest() != null ? page.getRequest().getExtra("collect") : null;
+            if (collectExtra != null) {
+                mhPetItem.setCollect(String.valueOf(collectExtra));
+            }
+            Object lightSpot1Extra = page.getRequest() != null ? page.getRequest().getExtra("lightSpot1") : null;
+            if (lightSpot1Extra != null) {
+                mhPetItem.setLightSpot1(String.valueOf(lightSpot1Extra));
+            }
+            Object lightSpot2Extra = page.getRequest() != null ? page.getRequest().getExtra("lightSpot2") : null;
+            if (lightSpot2Extra != null) {
+                mhPetItem.setLightSpot2(String.valueOf(lightSpot2Extra));
+            }
 
 
 
