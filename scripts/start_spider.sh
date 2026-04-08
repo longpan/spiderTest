@@ -6,6 +6,16 @@ JAR_FILE="${BASE_DIR}/spider.jar"
 LOG_FILE="${BASE_DIR}/spider.log"
 PORT="${PORT:-8081}"
 
+RUN_AS=( )
+if [[ "$(id -u)" == "0" ]] && command -v sudo >/dev/null 2>&1; then
+  RUN_AS=(sudo -u ubuntu -H)
+fi
+
+KILL=(kill)
+if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+  KILL=(sudo -n kill)
+fi
+
 if [[ ! -f "${JAR_FILE}" ]]; then
   echo "ERROR: jar not found: ${JAR_FILE}" >&2
   exit 1
@@ -16,7 +26,7 @@ PIDS="$(pgrep -f "java -jar ${JAR_FILE}" || true)"
 if [[ -n "${PIDS}" ]]; then
   echo "[start_spider] found running pid(s): ${PIDS}"
   for pid in ${PIDS}; do
-    kill "${pid}" || true
+    "${KILL[@]}" "${pid}" || true
   done
 
   for _ in $(seq 1 20); do
@@ -29,7 +39,7 @@ if [[ -n "${PIDS}" ]]; then
   if pgrep -f "java -jar ${JAR_FILE}" >/dev/null 2>&1; then
     echo "[start_spider] still running after grace period, sending SIGKILL..."
     for pid in $(pgrep -f "java -jar ${JAR_FILE}" || true); do
-      kill -9 "${pid}" || true
+      "${KILL[@]}" -9 "${pid}" || true
     done
   fi
 fi
@@ -38,9 +48,9 @@ echo "[start_spider] starting..."
 mkdir -p "${BASE_DIR}"
 
 if command -v setsid >/dev/null 2>&1; then
-  setsid -f java -jar "${JAR_FILE}" > "${LOG_FILE}" 2>&1 < /dev/null
+  "${RUN_AS[@]}" setsid -f java -jar "${JAR_FILE}" > "${LOG_FILE}" 2>&1 < /dev/null
 else
-  nohup java -jar "${JAR_FILE}" > "${LOG_FILE}" 2>&1 < /dev/null &
+  "${RUN_AS[@]}" nohup java -jar "${JAR_FILE}" > "${LOG_FILE}" 2>&1 < /dev/null &
 fi
 
 sleep 1

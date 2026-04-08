@@ -16,6 +16,16 @@ VNC_PASS="${VNC_PASS:-}"
 mkdir -p "${BASE_DIR}"
 chmod 700 "${BASE_DIR}" || true
 
+SUDO=( )
+if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+  SUDO=(sudo -n)
+fi
+
+RUN_AS_UBUNTU=( )
+if [[ "$(id -u)" == "0" ]] && command -v sudo >/dev/null 2>&1; then
+  RUN_AS_UBUNTU=(sudo -u ubuntu -H)
+fi
+
 spawn_detached() {
   local log_file="$1"
   shift
@@ -28,7 +38,7 @@ spawn_detached() {
 
 ensure_vncpass() {
   if [[ -n "${VNC_PASS}" ]]; then
-    x11vnc -storepasswd "${VNC_PASS}" "${BASE_DIR}/.vncpass"
+    "${RUN_AS_UBUNTU[@]}" x11vnc -storepasswd "${VNC_PASS}" "${BASE_DIR}/.vncpass"
   fi
   if [[ ! -f "${BASE_DIR}/.vncpass" ]]; then
     echo "missing ${BASE_DIR}/.vncpass (set VNC_PASS env to generate it)" >&2
@@ -37,9 +47,13 @@ ensure_vncpass() {
 }
 
 kill_vnc_stack() {
-  pkill -9 x11vnc || true
-  pkill -9 fluxbox || true
-  pkill -9 Xvfb || true
+  "${SUDO[@]}" pkill -9 x11vnc || true
+  "${SUDO[@]}" pkill -9 fluxbox || true
+  "${SUDO[@]}" pkill -9 Xvfb || true
+}
+
+clear_display_lock() {
+  "${SUDO[@]}" rm -f "/tmp/.X${DISPLAY_NUM}-lock" "/tmp/.X11-unix/X${DISPLAY_NUM}" || true
 }
 
 detect_chrome_bin() {
@@ -67,18 +81,36 @@ detect_chrome_bin() {
 }
 
 free_profile() {
-  pkill -f "/opt/google/chrome/chrome.*--user-data-dir=${CHROME_PROFILE_DIR}" || true
-  pkill -f "/snap/chromium/.*/chrome.*--user-data-dir=${CHROME_PROFILE_DIR}" || true
-  pkill -f "chromedriver" || true
-  rm -f "${CHROME_PROFILE_DIR}/SingletonLock" "${CHROME_PROFILE_DIR}/SingletonCookie" "${CHROME_PROFILE_DIR}/SingletonSocket" || true
+  "${SUDO[@]}" pkill -f "/opt/google/chrome/chrome.*--user-data-dir=${CHROME_PROFILE_DIR}" || true
+  "${SUDO[@]}" pkill -f "/snap/chromium/.*/chrome.*--user-data-dir=${CHROME_PROFILE_DIR}" || true
+  "${SUDO[@]}" pkill -f "chromedriver" || true
+  "${SUDO[@]}" rm -f "${CHROME_PROFILE_DIR}/SingletonLock" "${CHROME_PROFILE_DIR}/SingletonCookie" "${CHROME_PROFILE_DIR}/SingletonSocket" || true
+}
+
+fix_profile_ownership() {
+  if [[ -d "${CHROME_PROFILE_DIR}" ]]; then
+    "${SUDO[@]}" chown -R ubuntu:ubuntu "${CHROME_PROFILE_DIR}" || true
+    "${SUDO[@]}" chmod -R u+rwX,go-rwx "${CHROME_PROFILE_DIR}" || true
+  fi
 }
 
 start_vnc() {
   ensure_vncpass
   kill_vnc_stack
+  clear_display_lock
 
   mkdir -p "${CHROME_PROFILE_DIR}"
   chmod 700 "${CHROME_PROFILE_DIR}" || true
+  fix_profile_ownership
+
+  if [[ "$(id -u)" == "0" ]] && [[ -z "${RUN_AS_UBUNTU[*]}" ]]; then
+    echo "ERROR: running as root but cannot switch to ubuntu" >&2
+    exit 1
+  fi
+
+  if [[ "$(id -u)" == "0" ]]; then
+    exec "${RUN_AS_UBUNTU[@]}" BASE_DIR="${BASE_DIR}" DISPLAY_NUM="${DISPLAY_NUM}" RFB_PORT="${RFB_PORT}" WIDTH="${WIDTH}" HEIGHT="${HEIGHT}" DEPTH="${DEPTH}" CHROME_PROFILE_DIR="${CHROME_PROFILE_DIR}" OPEN_CHROME="${OPEN_CHROME}" CHROME_URL="${CHROME_URL}" VNC_PASS="${VNC_PASS}" "$0" start
+  fi
 
   spawn_detached "${BASE_DIR}/xvfb.log" Xvfb ":${DISPLAY_NUM}" -ac -screen 0 "${WIDTH}x${HEIGHT}x${DEPTH}"
 
@@ -89,6 +121,11 @@ start_vnc() {
     fi
     sleep 0.1
   done
+  if [[ ! -S "${X_SOCKET}" ]]; then
+    echo "ERROR: Xvfb did not create X socket ${X_SOCKET}" >&2
+    tail -n 80 "${BASE_DIR}/xvfb.log" 2>/dev/null | cat >&2 || true
+    exit 1
+  fi
 
   export DISPLAY=":${DISPLAY_NUM}"
   spawn_detached "${BASE_DIR}/fluxbox.log" fluxbox
