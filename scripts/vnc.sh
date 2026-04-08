@@ -16,6 +16,16 @@ VNC_PASS="${VNC_PASS:-}"
 mkdir -p "${BASE_DIR}"
 chmod 700 "${BASE_DIR}" || true
 
+spawn_detached() {
+  local log_file="$1"
+  shift
+  if command -v setsid >/dev/null 2>&1; then
+    setsid -f "$@" > "${log_file}" 2>&1 </dev/null
+  else
+    nohup "$@" > "${log_file}" 2>&1 </dev/null &
+  fi
+}
+
 ensure_vncpass() {
   if [[ -n "${VNC_PASS}" ]]; then
     x11vnc -storepasswd "${VNC_PASS}" "${BASE_DIR}/.vncpass"
@@ -70,7 +80,7 @@ start_vnc() {
   mkdir -p "${CHROME_PROFILE_DIR}"
   chmod 700 "${CHROME_PROFILE_DIR}" || true
 
-  nohup Xvfb ":${DISPLAY_NUM}" -ac -screen 0 "${WIDTH}x${HEIGHT}x${DEPTH}" > "${BASE_DIR}/xvfb.log" 2>&1 &
+  spawn_detached "${BASE_DIR}/xvfb.log" Xvfb ":${DISPLAY_NUM}" -ac -screen 0 "${WIDTH}x${HEIGHT}x${DEPTH}"
 
   X_SOCKET="/tmp/.X11-unix/X${DISPLAY_NUM}"
   for _ in $(seq 1 50); do
@@ -81,8 +91,8 @@ start_vnc() {
   done
 
   export DISPLAY=":${DISPLAY_NUM}"
-  nohup fluxbox > "${BASE_DIR}/fluxbox.log" 2>&1 &
-  nohup x11vnc -display ":${DISPLAY_NUM}" -forever -shared -rfbport "${RFB_PORT}" -rfbauth "${BASE_DIR}/.vncpass" > "${BASE_DIR}/x11vnc.log" 2>&1 &
+  spawn_detached "${BASE_DIR}/fluxbox.log" fluxbox
+  spawn_detached "${BASE_DIR}/x11vnc.log" x11vnc -display ":${DISPLAY_NUM}" -forever -shared -rfbport "${RFB_PORT}" -rfbauth "${BASE_DIR}/.vncpass"
 
   sleep 1
   ss -lntp | grep ":${RFB_PORT}" || true
@@ -91,7 +101,7 @@ start_vnc() {
   if [[ "${OPEN_CHROME}" == "true" ]]; then
     if CHROME_BIN_RESOLVED="$(detect_chrome_bin)"; then
       free_profile
-      nohup "${CHROME_BIN_RESOLVED}" --user-data-dir="${CHROME_PROFILE_DIR}" --no-sandbox "${CHROME_URL}" > "${BASE_DIR}/chrome.log" 2>&1 &
+      spawn_detached "${BASE_DIR}/chrome.log" "${CHROME_BIN_RESOLVED}" --user-data-dir="${CHROME_PROFILE_DIR}" --no-sandbox "${CHROME_URL}"
       echo "Chrome started: ${CHROME_BIN_RESOLVED} (${CHROME_PROFILE_DIR})"
     fi
   fi
