@@ -1,8 +1,7 @@
 package com.ongl.chen.utils.spider.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
-import org.springframework.stereotype.Repository;
+import com.ongl.chen.utils.spider.beans.dbg.MhEquipItem;
 
 
 /**
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Repository;
  *         Date: 13-6-23
  *         Time: 下午4:27
  */
-public interface MhPetItemDAO extends BaseMapper<MhPetItem> {
+public interface MhEquipItemDAO extends BaseMapper<MhEquipItem> {
 
 
 }

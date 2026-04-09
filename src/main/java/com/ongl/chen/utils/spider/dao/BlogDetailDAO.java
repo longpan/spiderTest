@@ -1,7 +1,7 @@
 package com.ongl.chen.utils.spider.dao;
 
 import com.ongl.chen.utils.spider.beans.CsdnBlogDetail;
-import org.apache.ibatis.annotations.Insert;
+import org.springframework.stereotype.Repository;
 
 
 /**

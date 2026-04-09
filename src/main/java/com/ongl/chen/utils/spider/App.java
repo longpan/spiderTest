@@ -1,10 +1,7 @@
 package com.ongl.chen.utils.spider;
 
-import com.ongl.chen.utils.spider.beans.UserInfo;
-import com.ongl.chen.utils.spider.hbasedao.UserInfoMapper;
-import com.ongl.chen.utils.spider.processor.CsdnBlogDetailsRepoPageProcessor;
 import com.ongl.chen.utils.spider.processor.JDProductProcessor;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
@@ -17,11 +14,12 @@ public class App
     {
 
         System.out.println( "Hello World!" );
-        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:/spring/spring*.xml");
-        final JDProductProcessor jdSpider = applicationContext.getBean(JDProductProcessor.class);
+        try (ConfigurableApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:/spring/spring*.xml")) {
+            final JDProductProcessor jdSpider = applicationContext.getBean(JDProductProcessor.class);
 
 //        jobCrawler.crawl();
-        jdSpider.start("奶粉");
+            jdSpider.start("奶粉");
+        }
        
     }
 }

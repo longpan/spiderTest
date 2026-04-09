@@ -1,6 +1,7 @@
 package com.ongl.chen.utils.spider.downloader.cbg;
 
 import com.ongl.chen.utils.spider.downloader.MyWebDriverPool;
+import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.*;
 import us.codecraft.webmagic.Page;
@@ -14,6 +15,7 @@ import us.codecraft.webmagic.selector.PlainText;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Created by apple on 2025/12/15.
@@ -26,16 +28,22 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
 
     private int poolSize = 1;
 
+    AppConfigFromPostForCbg appConfigFromPostForCbg;
+
     private static final String DRIVER_PHANTOMJS = "phantomjs";
+
+    Random random = new Random();
 
     /**
      * 新建
      *
      * @param chromeDriverPath chromeDriverPath
      */
-    public CbgMhxySeleniuDownloader(String chromeDriverPath) {
+    public CbgMhxySeleniuDownloader(String chromeDriverPath, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         System.getProperties().setProperty("webdriver.chrome.driver",
                 chromeDriverPath);
+        this.appConfigFromPostForCbg = appConfigFromPostForCbg;
+        this.sleepTime = appConfigFromPostForCbg.getGetDetailUrlSleepTimeMillis();
     }
 
     /**
@@ -68,18 +76,64 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
             return null;
         }
         System.out.println("spider star .... startUrl = " + request.getUrl());
+        String loginMode = appConfigFromPostForCbg != null ? appConfigFromPostForCbg.getLoginMode() : null;
+        if (loginMode == null || loginMode.trim().isEmpty()) {
+            loginMode = "auto";
+        } else {
+            loginMode = loginMode.trim().toLowerCase();
+        }
+
+        boolean hasCookieAuth = appConfigFromPostForCbg != null && StringUtils.isNotBlank(appConfigFromPostForCbg.getSid());
+        boolean useCookieAuth = "cookie".equals(loginMode) || ("auto".equals(loginMode) && hasCookieAuth);
+
+        if ("cookie".equals(loginMode) && !hasCookieAuth) {
+            throw new RuntimeException("loginMode=cookie but sid is blank");
+        }
+
+        if (useCookieAuth) {
+            webDriver.get("https://xyq.cbg.163.com/");
+            doLogin(webDriver, appConfigFromPostForCbg);
+        }
         webDriver.get(request.getUrl());
 
         String currentUrl = webDriver.getCurrentUrl();
+        String title = "";
+        try {
+            title = webDriver.getTitle();
+        } catch (Exception e) {
+        }
         System.out.println("currentUrl = " + currentUrl);
+        if (StringUtils.contains(request.getUrl(), "cgi-bin/query.py") && (StringUtils.equals(currentUrl, "https://xyq.cbg.163.com/") || StringUtils.equals(currentUrl, "https://xyq.cbg.163.com"))) {
+            System.out.println("redirect_to_home title = " + title);
+            throw new RuntimeException("redirect_to_home");
+        }
         if(!StringUtils.equals(request.getUrl(), currentUrl)) {
-            doLogin(webDriver);
+            if (useCookieAuth) {
+                doLogin(webDriver, appConfigFromPostForCbg);
+            }
             webDriver.navigate().refresh();
             webDriver.navigate().to(request.getUrl());
+            currentUrl = webDriver.getCurrentUrl();
+            try {
+                title = webDriver.getTitle();
+            } catch (Exception e) {
+            }
+            System.out.println("currentUrl_after_login = " + currentUrl);
+            if (StringUtils.contains(request.getUrl(), "cgi-bin/query.py") && (StringUtils.equals(currentUrl, "https://xyq.cbg.163.com/") || StringUtils.equals(currentUrl, "https://xyq.cbg.163.com"))) {
+                System.out.println("redirect_to_home_after_login title = " + title);
+                throw new RuntimeException("redirect_to_home_after_login");
+            }
+        }
+
+        if(StringUtils.contains(currentUrl, "act=show_mbauth")
+                || StringUtils.contains(currentUrl, "act=show_anon_auth_page")
+                || StringUtils.contains(currentUrl, "/cgi-bin/login.py")) {
+            System.out.println("当前页面需要认证，退出本次请求: " + currentUrl);
+            throw new RuntimeException("需要认证: " + currentUrl);
         }
 
         try {
-            Thread.sleep(sleepTime);
+            Thread.sleep( (sleepTime + random.nextInt(3000)));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -112,9 +166,9 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
         return page;
     }
 
-    private void doLogin(WebDriver webDriver) {
+    private void doLogin(WebDriver webDriver, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         //update
-        Cookie cookie1 = new Cookie("login_id", "c01280d7-bd5c-11ef-bb77-67111e799003");
+        Cookie cookie1 = new Cookie("login_id", appConfigFromPostForCbg.getLogin_id());
         Cookie cookie2 = new Cookie("login_user_roleid", "18922042");
         Cookie cookie3 = new Cookie("urs_share_login_token", "eWQuNDI0NThlOTBjYzE4NDFiNTlAMTYzLmNvbSRlOTFkNjBmZTg1MWExODlhMTA4YjMwZjBjOGYwZWQyOQ==");
 
@@ -124,12 +178,12 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
         webDriver.manage().addCookie(new Cookie("is_log_active_stat","1"));
         webDriver.manage().addCookie(new Cookie("area_id", "9"));
         //update
-        webDriver.manage().addCookie(new Cookie("cbg_qrcode", "v2.s.98SkE7tD30mZsVlu3u2PW6k0OpY08zqm4po6mv1wYoaWrDeS"));
+        webDriver.manage().addCookie(new Cookie("cbg_qrcode", appConfigFromPostForCbg.getCbg_qrcode()));
         //update
-        webDriver.manage().addCookie(new Cookie("reco_sid", "xMEQUOpgtFo6hHfsXl9oftqOBUti6_cOcv4Nsv9f"));
+        webDriver.manage().addCookie(new Cookie("reco_sid", appConfigFromPostForCbg.getReco_sid()));
         webDriver.manage().addCookie(new Cookie("login_user_urs", "lmj202412@163.com"));
         //update
-        webDriver.manage().addCookie(new Cookie("sid", "v2.s.Zq8C8M71bK-N87HwSiSwgQTtsP2p-ty4ARSyrjOfCuQQOk9I"));
+        webDriver.manage().addCookie(new Cookie("sid", appConfigFromPostForCbg.getSid()));
     }
 
     private void checkInit() {
@@ -148,4 +202,3 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
         webDriverPool.closeAll();
     }
 }
-

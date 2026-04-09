@@ -5,8 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ongl.chen.utils.spider.common.SuperEntity;
 
-import java.util.Date;
-
 @TableName(value = "cbg_item")
 public class CbgItem extends SuperEntity {
 

@@ -8,25 +8,29 @@
 */
 package com.ongl.chen.utils.spider.processor.cbg;
 
-import com.ongl.chen.utils.spider.beans.CbgItem;
 import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
-import com.ongl.chen.utils.spider.downloader.CbgSeleniuDownloaderV3;
 import com.ongl.chen.utils.spider.downloader.CbgSeleniuDownloaderV5;
 import com.ongl.chen.utils.spider.downloader.cbg.CbgMhxySeleniuDownloader;
 import com.ongl.chen.utils.spider.pipline.CbgItemExcelPipline;
 import com.ongl.chen.utils.spider.service.CbgItemService;
 import com.ongl.chen.utils.spider.service.MhPetItemService;
+import com.ongl.chen.utils.spider.service.MhValuationService;
 import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
+import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
 import com.ongl.chen.utils.spider.utils.UrlStringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Page;
+import us.codecraft.webmagic.Request;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
 import us.codecraft.webmagic.selector.Selectable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,22 +50,32 @@ public class CbgMhxyProcessor implements PageProcessor {
     @Autowired
     private AppConfig appConfig;
 
+    @Autowired
+    private MhValuationService mhValuationService;
 
     MhPetItemService mhPetItemService;
+
+    AppConfigFromPostForCbg appConfigFromPostForCbg;
 
     String URL_INDEX = "https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet";
 
     private static final String pageParms = "page";
     private static final String keyWordPara = "keyword";
 
-    public CbgMhxyProcessor(MhPetItemService mhPetItemService) {
+    private final Set<String> seenDetailUrls = Collections.synchronizedSet(new HashSet<>());
+
+    public CbgMhxyProcessor(MhPetItemService mhPetItemService, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         this.mhPetItemService = mhPetItemService;
+        this.appConfigFromPostForCbg = appConfigFromPostForCbg;
+        this.maxPageNum = appConfigFromPostForCbg.getMaxPage();
     }
 
     public CbgMhxyProcessor() {
     }
 
-    public static final int maxPageNum = 60; //100页
+    public int maxPageNum = 60; //100页
+
+    private volatile Spider currentSpider;
 
     public void process(Page page) {
 
@@ -71,7 +85,14 @@ public class CbgMhxyProcessor implements PageProcessor {
             List<Selectable> petList = page.getHtml().$("#soldList").xpath("tr").nodes();
             for (Selectable petSelectable : petList) {
 
-               String detailUrl =  petSelectable.links().all().get(0);
+                List<String> links = petSelectable.links().all();
+                if (links == null || links.isEmpty()) {
+                    continue;
+                }
+               String detailUrl =  StringUtils.strip(StringUtils.trim(links.get(0)), "` ");
+                if (StringUtils.isBlank(detailUrl) || !seenDetailUrls.add(detailUrl)) {
+                    continue;
+                }
                 String price = petSelectable.xpath("//td[5]/span/text()").toString();
                 List<Selectable> lightSpot1Selectable =   petSelectable.xpath("//td[3]/a").nodes();
                 String lightSpot1Temp = "";
@@ -89,26 +110,38 @@ public class CbgMhxyProcessor implements PageProcessor {
                 System.out.println("lightSpot1Temp = " + lightSpot1Temp);
                 System.out.println("lightSpot2Temp = " + lightSpot2Temp);
 
-                MhPetItem mhPetItem = new MhPetItem();
-                mhPetItem.setDetailUrl(detailUrl);
-                mhPetItem.setPrice(price);
-                mhPetItem.setCollect(collect);
-                mhPetItem.setLightSpot1(lightSpot1Temp);
-                mhPetItem.setLightSpot2(lightSpot2Temp);
-                mhPetItemService.insertOrUpdateByDetailUrl(mhPetItem);
-
-                page.addTargetRequest(detailUrl);
+                Request detailRequest = new Request(detailUrl);
+                detailRequest.putExtra("price", price);
+                detailRequest.putExtra("collect", collect);
+                detailRequest.putExtra("lightSpot1", lightSpot1Temp);
+                detailRequest.putExtra("lightSpot2", lightSpot2Temp);
+                page.addTargetRequest(detailRequest);
             }
             String nextPageUrl = getNextPageUrl(pageUrl);
             System.out.println("nextPageUrl : " + nextPageUrl);
-            page.addTargetRequest(nextPageUrl);
+            if (StringUtils.isNotBlank(nextPageUrl)) {
+                page.addTargetRequest(nextPageUrl);
+            }
         }
         if(StringUtils.contains(pageUrl, "xyq.cbg.163.com/equip?")) {
             MhPetItem mhPetItem = new MhPetItem();
+
+            // 解析大区和服务器
+            String serverInfo = page.getHtml().xpath("//div[@class='userInfo']/p[1]/text()").toString();
+            if (StringUtils.isNotBlank(serverInfo) && serverInfo.contains("->")) {
+                String[] parts = serverInfo.split("->");
+                if (parts.length >= 2) {
+                    mhPetItem.setArea(parts[0].trim());
+                    mhPetItem.setServerName(parts[1].trim());
+                }
+            }
+
             List<Selectable> infoList = page.getHtml().$(".infoList").nodes().get(0).xpath("li").nodes();
            String nameStr =  page.getHtml().$(".names").xpath("li/text()").toString();
             String name = StringUtils.split(nameStr, " ")[0];
             String level = StringUtils.split(nameStr, " ")[1];
+            String code = page.getHtml().regex("编号：</strong>\\s*([0-9]+)", 1).toString();
+            mhPetItem.setCode(code);
             int skillNum = page.getHtml().$("#pet_skill_grid_con").xpath("//img").nodes().size();
             List<String> skillList = page.getHtml().$("#pet_skill_grid_con").xpath("//img/@data_store_name").all();
             System.out.println("petDetail page : " + pageUrl);
@@ -153,32 +186,49 @@ public class CbgMhxyProcessor implements PageProcessor {
             mhPetItem.setMageDefence(mageDefence);
 
             //攻击资质
-            String attackQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[1]/td[1]/text()").toString();
+            String attackQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[1]/td[1]/span/text()").toString();
             mhPetItem.setAttackQualification(attackQualification);
             //寿命
             String lifetime = page.getHtml().$(".petZiZhiTb").xpath("//tr[1]/td[2]/text()").toString();
             mhPetItem.setLifetime(lifetime);
             //防御资质
-            String defenseQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[2]/td[1]/text()").toString();
+            String defenseQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[2]/td[1]/span/text()").toString();
             mhPetItem.setDefenseQualification(defenseQualification);
             //成长
             String growUp = page.getHtml().$(".petZiZhiTb").xpath("//tr[2]/td[2]/text()").toString();
             mhPetItem.setGrowUp(growUp);
             //体力资质
-            String physicalQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[3]/td[1]/text()").toString();
+            String physicalQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[3]/td[1]/span/text()").toString();
             mhPetItem.setPhysicalQualification(physicalQualification);
             //法力资质
-            String manaQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[4]/td[1]/text()").toString();
+            String manaQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[4]/td[1]/span/text()").toString();
             mhPetItem.setManaQualification(manaQualification);
             //速度资质
-            String speedQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[5]/td[1]/text()").toString();
+            String speedQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[5]/td[1]/span/text()").toString();
             mhPetItem.setSpeedQualification(speedQualification);
             //躲闪资质
-            String dodgeQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[6]/td[1]/text()").toString();
+            String dodgeQualification = page.getHtml().$(".petZiZhiTb").xpath("//tr[6]/td[1]/span/text()").toString();
             mhPetItem.setDodgeQualification(dodgeQualification);
             //是否宝宝
-            String isBaby = page.getHtml().$(".petZiZhiTb").xpath("//tr[7]/td[1]/text()").toString();
+            String isBaby = page.getHtml().$(".petZiZhiTb").xpath("//tr[7]/td[1]/span/text()").toString();
             mhPetItem.setIsBaby(isBaby);
+
+            Object priceExtra = page.getRequest() != null ? page.getRequest().getExtra("price") : null;
+            if (priceExtra != null) {
+                mhPetItem.setPrice(String.valueOf(priceExtra));
+            }
+            Object collectExtra = page.getRequest() != null ? page.getRequest().getExtra("collect") : null;
+            if (collectExtra != null) {
+                mhPetItem.setCollect(String.valueOf(collectExtra));
+            }
+            Object lightSpot1Extra = page.getRequest() != null ? page.getRequest().getExtra("lightSpot1") : null;
+            if (lightSpot1Extra != null) {
+                mhPetItem.setLightSpot1(String.valueOf(lightSpot1Extra));
+            }
+            Object lightSpot2Extra = page.getRequest() != null ? page.getRequest().getExtra("lightSpot2") : null;
+            if (lightSpot2Extra != null) {
+                mhPetItem.setLightSpot2(String.valueOf(lightSpot2Extra));
+            }
 
 
 
@@ -190,6 +240,11 @@ public class CbgMhxyProcessor implements PageProcessor {
             if(skillList != null) {
                 mhPetItem.setSkillList(skillList.toString());
             }
+
+            if (mhValuationService != null) {
+                mhValuationService.valuatePet(mhPetItem);
+            }
+
             mhPetItemService.insertOrUpdateByDetailUrl(mhPetItem);
 
 
@@ -202,7 +257,6 @@ public class CbgMhxyProcessor implements PageProcessor {
     public String getNextPageUrl(String thisUrl) {
 
         Map<String, String> mapRequest = UrlStringUtil.URLRequest(thisUrl);
-        int pageNum = 1;
         if (mapRequest.containsKey(pageParms)) {
             String pageStr = mapRequest.get(pageParms);
             int page = Integer.parseInt(pageStr);
@@ -239,20 +293,35 @@ public class CbgMhxyProcessor implements PageProcessor {
         String chromeDriverPath = "/usr/local/bin/chromedriver";
 //        String chromeDriverPath = "/usr/bin/chromedriver";
        // Spider.create(new CbgMhxysyProcessor()).addUrl("https://my.cbg.163.com/cgi/mweb/pl?view_loc=equip_list&from=kingkong&tfid=f_kingkong&refer_sn=01933EA6-4505-655E-BD4F-92DF5539C411").setDownloader(new CbgSeleniuDownloader(chromeDriverPath)).thread(1).run();
-        Spider.create(new CbgMhxyProcessor(null)).addUrl("https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet").setDownloader(new CbgMhxySeleniuDownloader(chromeDriverPath)).thread(1).run();
+        Spider.create(new CbgMhxyProcessor(null, null)).addUrl("https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet").setDownloader(new CbgMhxySeleniuDownloader(chromeDriverPath, null)).thread(1).run();
 
     }
 
 
 
-    public void start(AppConfigFromPost appConfigFromPost, MhPetItemService mhPetItemService) {
+    public void start(AppConfigFromPostForCbg appConfigFromPost, MhPetItemService mhPetItemService) {
         System.setProperty("selenuim_config", appConfigFromPost.getSelenuimConfig());
+        System.setProperty("headless", String.valueOf(appConfigFromPost.isHeadlessMode()));
         this.mhPetItemService = mhPetItemService;
         String chromeDriverPath = appConfigFromPost.getChromeDriverPath();
-        CbgMhxySeleniuDownloader seleniuDownloader = new CbgMhxySeleniuDownloader(chromeDriverPath);
+        this.appConfigFromPostForCbg = appConfigFromPost;
+        CbgMhxySeleniuDownloader seleniuDownloader = new CbgMhxySeleniuDownloader(chromeDriverPath, appConfigFromPost);
 
-        Spider.create(new CbgMhxyProcessor(mhPetItemService)).addUrl("https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet").setDownloader(seleniuDownloader).thread(1).run();
+        String detailUrl = StringUtils.strip(StringUtils.trim(appConfigFromPost.getDetailUrl()), "` ");
+        currentSpider = Spider.create(new CbgMhxyProcessor(mhPetItemService, appConfigFromPost))
+                .addUrl(detailUrl)
+                .setDownloader(seleniuDownloader)
+                .thread(1);
+        currentSpider.run();
+    }
 
-       // Spider.create(new CbgMhxysyProcessor()).addUrl("https://my.cbg.163.com/cgi/mweb/pl?view_loc=equip_list&from=kingkong&tfid=f_kingkong&refer_sn=01933EA6-4505-655E-BD4F-92DF5539C411").addPipeline(cbgItemExcelPipline).setDownloader(new CbgSeleniuDownloader(chromeDriverPath)).thread(1).run();
+    public void stop() {
+        try {
+            if (currentSpider != null) {
+                currentSpider.stop();
+                currentSpider.close();
+            }
+        } catch (Exception ignored) {
+        }
     }
 }

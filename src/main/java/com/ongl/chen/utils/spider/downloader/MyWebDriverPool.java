@@ -114,13 +114,38 @@ public class MyWebDriverPool {
         cliArgsCap.add("--ssl-protocol=any");
         cliArgsCap.add("--ignore-ssl-errors=true");
 
+
+        //options
+
         ChromeOptions options = new ChromeOptions();
         options.addArguments("test-type"); //ignore certificate errors
-        //options.addArguments("headless");// headless mode
+        
+        String userDataDir = sConfig.getProperty("user_data_dir");
+        if (userDataDir != null && userDataDir.trim().length() > 0) {
+            options.addArguments("--user-data-dir=" + userDataDir.trim());
+        }
+        String profileDirectory = sConfig.getProperty("profile_directory");
+        if (profileDirectory != null && profileDirectory.trim().length() > 0) {
+            options.addArguments("--profile-directory=" + profileDirectory.trim());
+        }
+
+        // 根据系统属性判断是否开启无头模式，默认不开启以方便调试
+        String headless = System.getProperty("headless");
+        if ("true".equalsIgnoreCase(headless)) {
+            options.addArguments("headless");// headless mode
+            System.out.println("Chrome is running in HEADLESS mode.");
+        } else {
+            System.out.println("Chrome is running in NORMAL mode (GUI).");
+        }
+        
         options.addArguments("disable-gpu");
 
         options.addArguments("disable-dev-shm-usage");
         options.addArguments("disable-plugins");
+
+        options.addArguments("--window-size=1920,1050");
+        options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36");
+
         String host = "y843.kdltps.com";
         int port = 15818;
         String proxyServer = "y843.kdltps.com:15818";

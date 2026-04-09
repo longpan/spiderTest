@@ -2,7 +2,7 @@ package com.ongl.chen.utils.spider.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.ongl.chen.utils.spider.beans.CbgItem;
-import com.ongl.chen.utils.spider.beans.JDProductDetail;
+import org.springframework.stereotype.Repository;
 
 
 /**
