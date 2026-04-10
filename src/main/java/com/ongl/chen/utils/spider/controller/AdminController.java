@@ -123,8 +123,11 @@ public class AdminController {
         
         IPage<MhPetItem> pageResult = mhPetItemDAO.selectPage(new Page<>(page, size), wrapper);
         
+        long totalPages = (pageResult.getTotal() + size - 1) / size;
+        
         model.addAttribute("pets", pageResult.getRecords());
         model.addAttribute("total", pageResult.getTotal());
+        model.addAttribute("totalPages", totalPages > 0 ? totalPages : 1);
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
         model.addAttribute("name", name);

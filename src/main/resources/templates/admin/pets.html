@@ -42,76 +42,80 @@
             </div>
         </div>
 
-        <!-- 数据列表 -->
+        <!-- 数据列表 - 表格布局 -->
         <div class="ant-card">
             <div class="card-header">
                 <h5><i class="bi bi-collection me-2"></i>宠物列表</h5>
                 <span class="text-muted" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
             </div>
             <div class="card-body p-0">
-                <table class="ant-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 60px;">ID</th>
-                            <th style="width: 120px;">编号</th>
-                            <th>名称</th>
-                            <th style="width: 80px;">等级</th>
-                            <th>服务器</th>
-                            <th style="width: 100px;">价格</th>
-                            <th style="width: 80px;">技能数</th>
-                            <th style="width: 100px;">更新时间</th>
-                            <th style="width: 140px;">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="pet : ${pets}">
-                            <td th:text="${pet.id}">1</td>
-                            <td th:text="${pet.code}" style="font-family: monospace; font-size: 13px;">-</td>
-                            <td>
-                                <span class="fw-medium" th:text="${pet.name} ?: '-'">-</span>
-                            </td>
-                            <td th:text="${pet.level} ?: '-'">-</td>
-                            <td>
-                                <span th:text="${pet.area} ?: ''" class="text-muted small"></span>
-                                <span th:if="${pet.area != null and pet.serverName != null}" class="text-muted small"> / </span>
-                                <span th:text="${pet.serverName} ?: '-'" class="fw-medium"></span>
-                            </td>
-                            <td>
-                                <span th:if="${pet.price != null}" style="color: #ff4d4f; font-weight: 500;" th:text="'¥' + ${pet.price}">¥0</span>
-                                <span th:if="${pet.price == null}">-</span>
-                            </td>
-                            <td>
-                                <span class="ant-tag ant-tag-processing" th:text="${pet.skillNum} ?: '0'">0</span>
-                            </td>
-                            <td th:text="${#dates.format(pet.updateTime, 'MM-dd HH:mm')}">01-01 12:00</td>
-                            <td>
-                                <button class="ant-btn ant-btn-primary ant-btn-sm" th:data-pet-id="${pet.id}" onclick="showDetail(this.getAttribute('data-pet-id'))" title="详情">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="ant-btn ant-btn-sm ms-1" th:data-item-code="${pet.code}" onclick="createReplayTask(this.getAttribute('data-item-code'))" title="重新爬取">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                                <a th:href="${pet.detailUrl}" target="_blank" class="ant-btn ant-btn-sm ms-1" title="查看原页">
-                                    <i class="bi bi-box-arrow-up-right"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- 表格容器带滚动 -->
+                <div class="table-scroll-container">
+                    <table class="ant-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">ID</th>
+                                <th style="width: 120px;">编号</th>
+                                <th>名称</th>
+                                <th style="width: 80px;">等级</th>
+                                <th>服务器</th>
+                                <th style="width: 100px;">价格</th>
+                                <th style="width: 80px;">技能数</th>
+                                <th style="width: 100px;">更新时间</th>
+                                <th style="width: 140px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="pet : ${pets}">
+                                <td th:text="${pet.id}">1</td>
+                                <td th:text="${pet.code}" style="font-family: monospace; font-size: 13px;">-</td>
+                                <td>
+                                    <span class="fw-medium" th:text="${pet.name} ?: '-'">-</span>
+                                </td>
+                                <td th:text="${pet.level} ?: '-'">-</td>
+                                <td>
+                                    <span th:text="${pet.area} ?: ''" class="text-muted small"></span>
+                                    <span th:if="${pet.area != null and pet.serverName != null}" class="text-muted small"> / </span>
+                                    <span th:text="${pet.serverName} ?: '-'" class="fw-medium"></span>
+                                </td>
+                                <td>
+                                    <span th:if="${pet.price != null}" style="color: #ff4d4f; font-weight: 500;" th:text="'¥' + ${pet.price}">¥0</span>
+                                    <span th:if="${pet.price == null}">-</span>
+                                </td>
+                                <td>
+                                    <span class="ant-tag ant-tag-processing" th:text="${pet.skillNum} ?: '0'">0</span>
+                                </td>
+                                <td th:text="${#dates.format(pet.updateTime, 'MM-dd HH:mm')}">01-01 12:00</td>
+                                <td>
+                                    <button class="ant-btn ant-btn-primary ant-btn-sm" th:data-pet-id="${pet.id}" onclick="showDetail(this.getAttribute('data-pet-id'))" title="详情">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="ant-btn ant-btn-sm ms-1" th:data-item-code="${pet.code}" onclick="createReplayTask(this.getAttribute('data-item-code'))" title="重新爬取">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                    <a th:href="${pet.detailUrl}" target="_blank" class="ant-btn ant-btn-sm ms-1" title="查看原页">
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <!-- 分页 -->
-                <div class="ant-pagination" th:if="${total > pageSize}">
+                <div class="ant-pagination" th:if="${totalPages != null and totalPages > 1}">
                     <a th:href="@{/admin/pets(page=${currentPage - 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
-                       th:classappend="${currentPage == 1} ? 'disabled'" style="opacity: 0.5; pointer-events: none;" th:if="${currentPage == 1}">上一页</a>
-                    <a th:href="@{/admin/pets(page=${currentPage - 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" th:if="${currentPage > 1}">上一页</a>
+                       th:classappend="${currentPage <= 1} ? 'disabled'" 
+                       th:style="${currentPage <= 1} ? 'opacity: 0.5; pointer-events: none;' : ''">上一页</a>
                     
-                    <a th:each="i : ${#numbers.sequence(1, (total + pageSize - 1) / pageSize)}"
+                    <a th:each="i : ${#numbers.sequence(1, totalPages)}"
                        th:href="@{/admin/pets(page=${i}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
-                       th:text="${i}" th:classappend="${i == currentPage} ? 'active'">1</a>
+                       th:text="${i}" 
+                       th:classappend="${i == currentPage} ? 'active'">1</a>
                     
                     <a th:href="@{/admin/pets(page=${currentPage + 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
-                       th:classappend="${currentPage * pageSize >= total} ? 'disabled'" style="opacity: 0.5; pointer-events: none;" th:if="${currentPage * pageSize >= total}">下一页</a>
-                    <a th:href="@{/admin/pets(page=${currentPage + 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" th:if="${currentPage * pageSize < total}">下一页</a>
+                       th:classappend="${currentPage >= totalPages} ? 'disabled'"
+                       th:style="${currentPage >= totalPages} ? 'opacity: 0.5; pointer-events: none;' : ''">下一页</a>
                 </div>
             </div>
         </div>
@@ -131,6 +135,47 @@
             </div>
         </div>
     </div>
+
+    <style th:fragment="styles">
+        /* 表格滚动容器 */
+        .table-scroll-container {
+            max-height: calc(100vh - 380px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* 自定义滚动条 */
+        .table-scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* 固定表头 */
+        .table-scroll-container .ant-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .table-scroll-container .ant-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .table-scroll-container .ant-table thead th {
+            background: #fafafa;
+            border-bottom: 2px solid #f0f0f0;
+        }
+    </style>
 
     <script th:fragment="scripts">
         function showDetail(petId) {
