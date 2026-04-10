@@ -234,10 +234,18 @@ public class MyWebDriverPool {
                     // add new WebDriver instance into pool
                     try {
                         configure();
-                        innerQueue.add(mDriver);
-                        webDriverList.add(mDriver);
+                        if (mDriver != null) {
+                            innerQueue.add(mDriver);
+                            webDriverList.add(mDriver);
+                            System.out.println("[MyWebDriverPool] WebDriver创建成功，当前池大小: " + webDriverList.size());
+                        } else {
+                            System.err.println("[MyWebDriverPool] WebDriver创建失败: mDriver is null");
+                            throw new RuntimeException("WebDriver创建失败: mDriver is null");
+                        }
                     } catch (IOException e) {
+                        System.err.println("[MyWebDriverPool] 配置加载失败: " + e.getMessage());
                         e.printStackTrace();
+                        throw new RuntimeException("WebDriver配置加载失败: " + e.getMessage(), e);
                     }
 
                     // ChromeDriver e = new ChromeDriver();
@@ -248,7 +256,12 @@ public class MyWebDriverPool {
             }
 
         }
-        return innerQueue.take();
+        // 如果队列仍为空，说明创建失败，抛出异常而不是阻塞
+        poll = innerQueue.poll();
+        if (poll != null) {
+            return poll;
+        }
+        throw new RuntimeException("无法获取WebDriver，可能配置有误或已达到最大容量");
     }
 
     public void returnToPool(WebDriver webDriver) {

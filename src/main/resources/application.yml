@@ -49,3 +49,11 @@ pull-down:
   sleep-time-millis: 3000
 get-detail-url:
   sleep-time-millis: 3000
+
+# 爬虫任务调度配置
+spider:
+  task:
+    # 最大并发任务数
+    max-concurrent: 1
+    # 任务轮询间隔（毫秒）
+    poll-interval: 5000

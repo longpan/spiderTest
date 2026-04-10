@@ -12,9 +12,7 @@ import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
 import com.ongl.chen.utils.spider.downloader.CbgSeleniuDownloaderV5;
 import com.ongl.chen.utils.spider.downloader.cbg.CbgMhxySeleniuDownloader;
 import com.ongl.chen.utils.spider.pipline.CbgItemExcelPipline;
-import com.ongl.chen.utils.spider.service.CbgItemService;
-import com.ongl.chen.utils.spider.service.MhPetItemService;
-import com.ongl.chen.utils.spider.service.MhValuationService;
+import com.ongl.chen.utils.spider.service.*;
 import com.ongl.chen.utils.spider.utils.AppConfig;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPost;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
@@ -52,6 +50,12 @@ public class CbgMhxyProcessor implements PageProcessor {
 
     @Autowired
     private MhValuationService mhValuationService;
+
+    @Autowired
+    private CbgAuthConfigService cbgAuthConfigService;
+
+    @Autowired
+    private CbgSpiderTaskService cbgSpiderTaskService;
 
     MhPetItemService mhPetItemService;
 
@@ -291,28 +295,44 @@ public class CbgMhxyProcessor implements PageProcessor {
     public static void main(String[] args) {
         System.setProperty("selenuim_config", "/Users/onglchen/proenv/selenium/config.ini");
         String chromeDriverPath = "/usr/local/bin/chromedriver";
-//        String chromeDriverPath = "/usr/bin/chromedriver";
-       // Spider.create(new CbgMhxysyProcessor()).addUrl("https://my.cbg.163.com/cgi/mweb/pl?view_loc=equip_list&from=kingkong&tfid=f_kingkong&refer_sn=01933EA6-4505-655E-BD4F-92DF5539C411").setDownloader(new CbgSeleniuDownloader(chromeDriverPath)).thread(1).run();
         Spider.create(new CbgMhxyProcessor(null, null)).addUrl("https://xyq.cbg.163.com/cgi-bin/query.py?act=search_pet").setDownloader(new CbgMhxySeleniuDownloader(chromeDriverPath, null)).thread(1).run();
-
     }
 
-
-
+    /**
+     * 兼容模式启动 - 使用全局认证配置创建任务
+     */
     public void start(AppConfigFromPostForCbg appConfigFromPost, MhPetItemService mhPetItemService) {
-        System.setProperty("selenuim_config", appConfigFromPost.getSelenuimConfig());
-        System.setProperty("headless", String.valueOf(appConfigFromPost.isHeadlessMode()));
-        this.mhPetItemService = mhPetItemService;
-        String chromeDriverPath = appConfigFromPost.getChromeDriverPath();
-        this.appConfigFromPostForCbg = appConfigFromPost;
-        CbgMhxySeleniuDownloader seleniuDownloader = new CbgMhxySeleniuDownloader(chromeDriverPath, appConfigFromPost);
+        // 保存认证配置到全局（如果提供了）
+        if (appConfigFromPost != null) {
+            saveAuthConfigToGlobal(appConfigFromPost);
+        }
 
+        // 使用全局认证配置创建任务
         String detailUrl = StringUtils.strip(StringUtils.trim(appConfigFromPost.getDetailUrl()), "` ");
-        currentSpider = Spider.create(new CbgMhxyProcessor(mhPetItemService, appConfigFromPost))
-                .addUrl(detailUrl)
-                .setDownloader(seleniuDownloader)
-                .thread(1);
-        currentSpider.run();
+        int maxPage = appConfigFromPost.getMaxPage() > 0 ? appConfigFromPost.getMaxPage() : 60;
+
+        // 创建列表页任务
+        cbgSpiderTaskService.createListPageTasks(detailUrl, maxPage);
+
+        System.out.println("兼容模式：已创建列表页任务，URL: " + detailUrl + ", 最大页数: " + maxPage);
+    }
+
+    /**
+     * 将传入的认证配置保存到全局
+     */
+    private void saveAuthConfigToGlobal(AppConfigFromPostForCbg appConfig) {
+        com.ongl.chen.utils.spider.beans.cbg.CbgAuthConfig globalConfig = new com.ongl.chen.utils.spider.beans.cbg.CbgAuthConfig();
+        globalConfig.setSid(appConfig.getSid());
+        globalConfig.setLoginId(appConfig.getLogin_id());
+        globalConfig.setCbgQrcode(appConfig.getCbg_qrcode());
+        globalConfig.setRecoSid(appConfig.getReco_sid());
+        globalConfig.setLoginMode(appConfig.getLoginMode());
+        globalConfig.setSelenuimConfig(appConfig.getSelenuimConfig());
+        globalConfig.setChromeDriverPath(appConfig.getChromeDriverPath());
+        globalConfig.setHeadlessMode(appConfig.isHeadlessMode());
+        globalConfig.setIsValid(true);
+
+        cbgAuthConfigService.saveOrUpdateConfig(globalConfig);
     }
 
     public void stop() {

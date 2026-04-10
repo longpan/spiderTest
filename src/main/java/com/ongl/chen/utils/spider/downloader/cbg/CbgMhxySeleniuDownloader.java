@@ -1,6 +1,7 @@
 package com.ongl.chen.utils.spider.downloader.cbg;
 
 import com.ongl.chen.utils.spider.downloader.MyWebDriverPool;
+import com.ongl.chen.utils.spider.exception.AuthInvalidException;
 import com.ongl.chen.utils.spider.utils.AppConfigFromPostForCbg;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.*;
@@ -42,8 +43,16 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
     public CbgMhxySeleniuDownloader(String chromeDriverPath, AppConfigFromPostForCbg appConfigFromPostForCbg) {
         System.getProperties().setProperty("webdriver.chrome.driver",
                 chromeDriverPath);
+        // 设置selenium配置文件路径，供MyWebDriverPool使用
+        if (appConfigFromPostForCbg != null && appConfigFromPostForCbg.getSelenuimConfig() != null) {
+            System.setProperty("selenuim_config", appConfigFromPostForCbg.getSelenuimConfig());
+        }
+        // 设置headless模式
+        if (appConfigFromPostForCbg != null && appConfigFromPostForCbg.isHeadlessMode()) {
+            System.setProperty("headless", "true");
+        }
         this.appConfigFromPostForCbg = appConfigFromPostForCbg;
-        this.sleepTime = appConfigFromPostForCbg.getGetDetailUrlSleepTimeMillis();
+        this.sleepTime = appConfigFromPostForCbg != null ? appConfigFromPostForCbg.getGetDetailUrlSleepTimeMillis() : 3000;
     }
 
     /**
@@ -125,11 +134,15 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
             }
         }
 
+        // 检测认证失效的各种情况
         if(StringUtils.contains(currentUrl, "act=show_mbauth")
                 || StringUtils.contains(currentUrl, "act=show_anon_auth_page")
-                || StringUtils.contains(currentUrl, "/cgi-bin/login.py")) {
-            System.out.println("当前页面需要认证，退出本次请求: " + currentUrl);
-            throw new RuntimeException("需要认证: " + currentUrl);
+                || StringUtils.contains(currentUrl, "/cgi-bin/login.py")
+                || StringUtils.contains(currentUrl, "show_login.py")
+                || StringUtils.contains(currentUrl, "act=show_login")) {
+            System.out.println("当前页面需要认证，认证已失效: " + currentUrl);
+            // 认证失效，抛出特殊异常让上层处理
+            throw new AuthInvalidException("认证已失效，需要重新登录: " + currentUrl);
         }
 
         try {

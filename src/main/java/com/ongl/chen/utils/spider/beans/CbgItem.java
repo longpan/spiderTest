@@ -3,9 +3,13 @@ package com.ongl.chen.utils.spider.beans;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.gitee.sunchenbin.mybatis.actable.annotation.Table;
 import com.ongl.chen.utils.spider.common.SuperEntity;
 
+import java.util.Date;
+
 @TableName(value = "cbg_item")
+@Table(name = "cbg_item")
 public class CbgItem extends SuperEntity {
 
     @TableField(value = "code")
@@ -52,6 +56,10 @@ public class CbgItem extends SuperEntity {
     @TableField(value = "detailUrl")
     @ExcelProperty("链接")
     String detailUrl;
+    @TableField(value = "createTime")
+    private Date createTime;
+    @TableField(value = "updateTime")
+    private Date updateTime;
 
 
 
@@ -165,5 +173,21 @@ public class CbgItem extends SuperEntity {
 
     public void setDraw(String draw) {
         this.draw = draw;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
     }
 }
