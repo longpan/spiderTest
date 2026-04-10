@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='宠物数据', active='pets')}">
+<head>
+    <title>宠物数据</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h4>宠物数据</h4>
+            <div class="breadcrumb">首页 / 宠物数据</div>
+        </div>
+
+        <!-- 搜索卡片 -->
+        <div class="ant-card">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">宠物名称</label>
+                        <input type="text" name="name" class="ant-input" th:value="${name}" placeholder="输入宠物名称">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">服务器</label>
+                        <input type="text" name="serverName" class="ant-input" th:value="${serverName}" placeholder="输入服务器名称">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">每页条数</label>
+                        <select name="size" class="ant-input">
+                            <option value="50" th:selected="${pageSize == 50}">50条</option>
+                            <option value="100" th:selected="${pageSize == 100}">100条</option>
+                            <option value="200" th:selected="${pageSize == 200}">200条</option>
+                            <option value="500" th:selected="${pageSize == 500}">500条</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="ant-btn ant-btn-primary">
+                            <i class="bi bi-search"></i> 查询
+                        </button>
+                        <a href="/admin/pets" class="ant-btn ms-2">重置</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 数据列表 -->
+        <div class="ant-card">
+            <div class="card-header">
+                <h5><i class="bi bi-collection me-2"></i>宠物列表</h5>
+                <span class="text-muted" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
+            </div>
+            <div class="card-body p-0">
+                <table class="ant-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th style="width: 120px;">编号</th>
+                            <th>名称</th>
+                            <th style="width: 80px;">等级</th>
+                            <th>服务器</th>
+                            <th style="width: 100px;">价格</th>
+                            <th style="width: 80px;">技能数</th>
+                            <th style="width: 100px;">更新时间</th>
+                            <th style="width: 140px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pet : ${pets}">
+                            <td th:text="${pet.id}">1</td>
+                            <td th:text="${pet.code}" style="font-family: monospace; font-size: 13px;">-</td>
+                            <td>
+                                <span class="fw-medium" th:text="${pet.name} ?: '-'">-</span>
+                            </td>
+                            <td th:text="${pet.level} ?: '-'">-</td>
+                            <td>
+                                <span th:text="${pet.area} ?: ''" class="text-muted small"></span>
+                                <span th:if="${pet.area != null and pet.serverName != null}" class="text-muted small"> / </span>
+                                <span th:text="${pet.serverName} ?: '-'" class="fw-medium"></span>
+                            </td>
+                            <td>
+                                <span th:if="${pet.price != null}" style="color: #ff4d4f; font-weight: 500;" th:text="'¥' + ${pet.price}">¥0</span>
+                                <span th:if="${pet.price == null}">-</span>
+                            </td>
+                            <td>
+                                <span class="ant-tag ant-tag-processing" th:text="${pet.skillNum} ?: '0'">0</span>
+                            </td>
+                            <td th:text="${#dates.format(pet.updateTime, 'MM-dd HH:mm')}">01-01 12:00</td>
+                            <td>
+                                <button class="ant-btn ant-btn-primary ant-btn-sm" th:data-pet-id="${pet.id}" onclick="showDetail(this.getAttribute('data-pet-id'))" title="详情">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="ant-btn ant-btn-sm ms-1" th:data-item-code="${pet.code}" onclick="createReplayTask(this.getAttribute('data-item-code'))" title="重新爬取">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                                <a th:href="${pet.detailUrl}" target="_blank" class="ant-btn ant-btn-sm ms-1" title="查看原页">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- 分页 -->
+                <div class="ant-pagination" th:if="${total > pageSize}">
+                    <a th:href="@{/admin/pets(page=${currentPage - 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
+                       th:classappend="${currentPage == 1} ? 'disabled'" style="opacity: 0.5; pointer-events: none;" th:if="${currentPage == 1}">上一页</a>
+                    <a th:href="@{/admin/pets(page=${currentPage - 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" th:if="${currentPage > 1}">上一页</a>
+                    
+                    <a th:each="i : ${#numbers.sequence(1, (total + pageSize - 1) / pageSize)}"
+                       th:href="@{/admin/pets(page=${i}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
+                       th:text="${i}" th:classappend="${i == currentPage} ? 'active'">1</a>
+                    
+                    <a th:href="@{/admin/pets(page=${currentPage + 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
+                       th:classappend="${currentPage * pageSize >= total} ? 'disabled'" style="opacity: 0.5; pointer-events: none;" th:if="${currentPage * pageSize >= total}">下一页</a>
+                    <a th:href="@{/admin/pets(page=${currentPage + 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" th:if="${currentPage * pageSize < total}">下一页</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详情模态框 -->
+        <div class="modal fade" id="detailModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">宠物详情</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="detailContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:fragment="scripts">
+        function showDetail(petId) {
+            fetch('/admin/api/pet/' + petId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const pet = data.data;
+                        let html = '<div class="row">';
+                        html += '<div class="col-md-6"><table class="table table-sm">';
+                        html += '<tr><th>编号</th><td>' + (pet.code || '-') + '</td></tr>';
+                        html += '<tr><th>名称</th><td>' + (pet.name || '-') + '</td></tr>';
+                        html += '<tr><th>等级</th><td>' + (pet.level || '-') + '</td></tr>';
+                        html += '<tr><th>服务器</th><td>' + (pet.serverName || '-') + '</td></tr>';
+                        html += '<tr><th>大区</th><td>' + (pet.area || '-') + '</td></tr>';
+                        html += '<tr><th>价格</th><td>' + (pet.price || '-') + '</td></tr>';
+                        html += '<tr><th>收藏数</th><td>' + (pet.collect || '-') + '</td></tr>';
+                        html += '<tr><th>技能数</th><td>' + (pet.skillNum || 0) + '</td></tr>';
+                        html += '<tr><th>技能列表</th><td>' + (pet.skillList || '-') + '</td></tr>';
+                        html += '</table></div>';
+                        
+                        html += '<div class="col-md-6"><table class="table table-sm">';
+                        html += '<tr><th>气血</th><td>' + (pet.blood || '-') + '</td></tr>';
+                        html += '<tr><th>魔法</th><td>' + (pet.magic || '-') + '</td></tr>';
+                        html += '<tr><th>攻击</th><td>' + (pet.attack || '-') + '</td></tr>';
+                        html += '<tr><th>防御</th><td>' + (pet.defense || '-') + '</td></tr>';
+                        html += '<tr><th>速度</th><td>' + (pet.speed || '-') + '</td></tr>';
+                        html += '<tr><th>成长</th><td>' + (pet.growUp || '-') + '</td></tr>';
+                        html += '<tr><th>寿命</th><td>' + (pet.lifetime || '-') + '</td></tr>';
+                        html += '<tr><th>亮点1</th><td>' + (pet.lightSpot1 || '-') + '</td></tr>';
+                        html += '<tr><th>亮点2</th><td>' + (pet.lightSpot2 || '-') + '</td></tr>';
+                        html += '</table></div>';
+                        html += '</div>';
+                        
+                        document.getElementById('detailContent').innerHTML = html;
+                        new bootstrap.Modal(document.getElementById('detailModal')).show();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(e => alert('获取详情失败: ' + e.message));
+        }
+
+        function createReplayTask(itemCode) {
+            if (!confirm('确定要重新爬取该物品吗？')) return;
+            fetch('/admin/api/task/replay?itemCode=' + itemCode, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+    </script>
+</body>
+</html>

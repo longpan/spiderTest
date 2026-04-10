@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">藏宝阁爬虫管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 220px;
+            --header-height: 60px;
+            --primary-color: #1890ff;
+            --sidebar-bg: #001529;
+            --sidebar-hover: #1890ff;
+            --content-bg: #f0f2f5;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--content-bg);
+            min-height: 100vh;
+        }
+        
+        /* 顶部导航 */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+        }
+        
+        .top-header .brand {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1890ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .top-header .nav-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .top-header .nav-right a {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.3s;
+        }
+        
+        .top-header .nav-right a:hover {
+            color: #1890ff;
+        }
+        
+        /* 侧边栏 */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background: var(--sidebar-bg);
+            z-index: 999;
+            overflow-y: auto;
+        }
+        
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        
+        .sidebar-menu .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-menu .menu-item:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .sidebar-menu .menu-item.active {
+            color: #fff;
+            background: #1890ff;
+            border-left-color: #fff;
+        }
+        
+        .sidebar-menu .menu-item i {
+            font-size: 16px;
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* 主内容区 */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: 24px;
+            min-height: calc(100vh - var(--header-height));
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 24px;
+        }
+        
+        .page-header h4 {
+            font-size: 20px;
+            font-weight: 500;
+            color: #262626;
+            margin: 0;
+        }
+        
+        .page-header .breadcrumb {
+            font-size: 14px;
+            color: #8c8c8c;
+            margin-top: 8px;
+        }
+        
+        /* 卡片样式 */
+        .ant-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        
+        .ant-card .card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .ant-card .card-header h5 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #262626;
+            margin: 0;
+        }
+        
+        .ant-card .card-body {
+            padding: 24px;
+        }
+        
+        /* 统计卡片 */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+        
+        .stat-card .stat-icon.blue { background: #e6f7ff; color: #1890ff; }
+        .stat-card .stat-icon.gray { background: #f5f5f5; color: #8c8c8c; }
+        .stat-card .stat-icon.cyan { background: #e6fffb; color: #13c2c2; }
+        .stat-card .stat-icon.green { background: #f6ffed; color: #52c41a; }
+        .stat-card .stat-icon.red { background: #fff2f0; color: #ff4d4f; }
+        .stat-card .stat-icon.orange { background: #fff7e6; color: #fa8c16; }
+        
+        .stat-card .stat-info {
+            flex: 1;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #262626;
+            line-height: 1;
+        }
+        
+        .stat-card .stat-label {
+            font-size: 14px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+        
+        /* 表格样式 */
+        .ant-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .ant-table th {
+            background: #fafafa;
+            color: #262626;
+            font-weight: 500;
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        
+        .ant-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #595959;
+        }
+        
+        .ant-table tr:hover td {
+            background: #fafafa;
+        }
+        
+        /* 按钮样式 */
+        .ant-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            color: #595959;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .ant-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: #fff;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+            color: #fff;
+        }
+        
+        .ant-btn-success {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: #fff;
+        }
+        
+        .ant-btn-success:hover {
+            background: #73d13d;
+            border-color: #73d13d;
+        }
+        
+        .ant-btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: #fff;
+        }
+        
+        .ant-btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .ant-btn-sm {
+            padding: 4px 12px;
+            font-size: 13px;
+        }
+        
+        /* 状态标签 */
+        .ant-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .ant-tag-default { background: #f5f5f5; color: #8c8c8c; }
+        .ant-tag-processing { background: #e6f7ff; color: #1890ff; }
+        .ant-tag-success { background: #f6ffed; color: #52c41a; }
+        .ant-tag-error { background: #fff2f0; color: #ff4d4f; }
+        .ant-tag-warning { background: #fff7e6; color: #fa8c16; }
+        
+        /* 表单样式 */
+        .ant-form-item {
+            margin-bottom: 20px;
+        }
+        
+        .ant-form-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #262626;
+            font-weight: 500;
+        }
+        
+        .ant-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-input:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .ant-input::placeholder {
+            color: #bfbfbf;
+        }
+        
+        /* 分页 */
+        .ant-pagination {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .ant-pagination a {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            color: #595959;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-pagination a:hover,
+        .ant-pagination a.active {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        /* 空状态 */
+        .ant-empty {
+            text-align: center;
+            padding: 48px 0;
+            color: #8c8c8c;
+        }
+        
+        .ant-empty i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #d9d9d9;
+        }
+    </style>
+</head>
+<body th:fragment="layout(title, active)">
+    <!-- 顶部导航 -->
+    <header class="top-header">
+        <div class="brand">
+            <i class="bi bi-hexagon-fill"></i>
+            <span>藏宝阁爬虫管理系统</span>
+        </div>
+        <div class="nav-right">
+            <a href="/swagger-ui.html" target="_blank">
+                <i class="bi bi-file-earmark-code"></i>
+                <span>API文档</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+        <nav class="sidebar-menu">
+            <a class="menu-item" th:classappend="${active == 'dashboard'} ? 'active'" href="/admin/dashboard">
+                <i class="bi bi-speedometer2"></i>
+                <span>仪表盘</span>
+            </a>
+            <a class="menu-item" th:classappend="${active == 'tasks'} ? 'active'" href="/admin/tasks">
+                <i class="bi bi-list-task"></i>
+                <span>任务管理</span>
+            </a>
+            <a class="menu-item" th:classappend="${active == 'pets'} ? 'active'" href="/admin/pets">
+                <i class="bi bi-collection"></i>
+                <span>宠物数据</span>
+            </a>
+            <a class="menu-item" th:classappend="${active == 'auth'} ? 'active'" href="/admin/auth">
+                <i class="bi bi-key"></i>
+                <span>认证配置</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-wrapper">
+        <div th:replace=":: content"></div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div th:replace=":: scripts"></div>
+</body>
+</html>

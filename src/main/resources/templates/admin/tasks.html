@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='任务管理', active='tasks')}">
+<head>
+    <title>任务管理</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h4>任务管理</h4>
+            <div class="breadcrumb">首页 / 任务管理</div>
+        </div>
+
+        <!-- 筛选卡片 -->
+        <div class="ant-card">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">任务状态</label>
+                        <select name="status" class="ant-input">
+                            <option value="">全部状态</option>
+                            <option value="PENDING" th:selected="${status == 'PENDING'}">等待中</option>
+                            <option value="RUNNING" th:selected="${status == 'RUNNING'}">执行中</option>
+                            <option value="SUCCESS" th:selected="${status == 'SUCCESS'}">成功</option>
+                            <option value="FAILED" th:selected="${status == 'FAILED'}">失败</option>
+                            <option value="STOPPED" th:selected="${status == 'STOPPED'}">已停止</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="ant-btn ant-btn-primary">
+                            <i class="bi bi-search"></i> 查询
+                        </button>
+                        <a href="/admin/tasks" class="ant-btn ms-2">重置</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 任务列表 -->
+        <div class="ant-card">
+            <div class="card-header">
+                <h5><i class="bi bi-list-task me-2"></i>任务列表</h5>
+                <span class="text-muted" th:text="'共 ' + ${#lists.size(tasks)} + ' 条'">共 0 条</span>
+            </div>
+            <div class="card-body p-0">
+                <table class="ant-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th style="width: 90px;">类型</th>
+                            <th style="width: 90px;">状态</th>
+                            <th style="width: 120px;">物品编号</th>
+                            <th>URL</th>
+                            <th style="width: 80px;">重试</th>
+                            <th style="width: 150px;">错误信息</th>
+                            <th style="width: 100px;">创建时间</th>
+                            <th style="width: 120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="task : ${tasks}">
+                            <td th:text="${task.id}">1</td>
+                            <td>
+                                <span class="ant-tag" th:classappend="${task.taskType == 'LIST_PAGE'} ? 'ant-tag-default' : 'ant-tag-processing'"
+                                      th:text="${task.taskType == 'LIST_PAGE'} ? '列表页' : '详情页'">详情页</span>
+                            </td>
+                            <td>
+                                <span th:switch="${task.status}" class="ant-tag">
+                                    <span th:case="'PENDING'" class="ant-tag-default">等待中</span>
+                                    <span th:case="'RUNNING'" class="ant-tag-processing">执行中</span>
+                                    <span th:case="'SUCCESS'" class="ant-tag-success">成功</span>
+                                    <span th:case="'FAILED'" class="ant-tag-error">失败</span>
+                                    <span th:case="'STOPPED'" class="ant-tag-warning">已停止</span>
+                                </span>
+                            </td>
+                            <td th:text="${task.itemCode} ?: '-'" style="font-family: monospace;">-</td>
+                            <td>
+                                <a th:href="${task.url}" target="_blank" th:text="${#strings.abbreviate(task.url, 35)}" style="color: #1890ff; text-decoration: none;">URL</a>
+                            </td>
+                            <td th:text="${task.retryCount}">0</td>
+                            <td>
+                                <span th:if="${task.result}" th:text="${#strings.abbreviate(task.result, 20)}" 
+                                      style="color: #ff4d4f; cursor: pointer;" th:data-error="${task.result}" onclick="alert(this.getAttribute('data-error'))">-</span>
+                                <span th:if="${task.result == null}">-</span>
+                            </td>
+                            <td th:text="${#dates.format(task.createTime, 'MM-dd HH:mm')}">01-01 12:00</td>
+                            <td>
+                                <button th:if="${task.status == 'FAILED' or task.status == 'STOPPED'}" 
+                                        class="ant-btn ant-btn-primary ant-btn-sm" th:data-task-id="${task.id}" onclick="retryTask(this.getAttribute('data-task-id'))" title="重试">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                                <button th:if="${task.status == 'RUNNING'}" class="ant-btn ant-btn-danger ant-btn-sm"
+                                        th:data-task-id="${task.id}" onclick="stopTask(this.getAttribute('data-task-id'))" title="停止">
+                                    <i class="bi bi-stop-fill"></i>
+                                </button>
+                                <button class="ant-btn ant-btn-sm ms-1" th:data-task-id="${task.id}" onclick="showDetail(this.getAttribute('data-task-id'))" title="详情">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 详情模态框 -->
+        <div class="modal fade" id="detailModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">任务详情</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <pre id="detailContent" class="bg-light p-3" style="max-height: 400px; overflow: auto; font-size: 13px;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:fragment="scripts">
+        function retryTask(taskId) {
+            if (!confirm('确定要重试该任务吗？')) return;
+            fetch('/admin/api/task/' + taskId + '/retry', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) location.reload();
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+
+        function stopTask(taskId) {
+            if (!confirm('确定要停止该任务吗？')) return;
+            fetch('/admin/api/task/' + taskId + '/stop', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) location.reload();
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+
+        function showDetail(taskId) {
+            fetch('/admin/api/task/' + taskId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('detailContent').textContent = JSON.stringify(data.data, null, 2);
+                        new bootstrap.Modal(document.getElementById('detailModal')).show();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(e => alert('获取详情失败: ' + e.message));
+        }
+    </script>
+</body>
+</html>

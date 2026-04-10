@@ -212,6 +212,13 @@
           <version>2.9.2</version>
       </dependency>
 
+      <!-- Thymeleaf -->
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-thymeleaf</artifactId>
+          <version>2.2.6.RELEASE</version>
+      </dependency>
+
   </dependencies>
 
 

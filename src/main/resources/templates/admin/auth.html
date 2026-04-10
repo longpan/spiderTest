@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='认证配置', active='auth')}">
+<head>
+    <title>认证配置</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h4>认证配置</h4>
+            <div class="breadcrumb">首页 / 认证配置</div>
+        </div>
+
+        <!-- 认证状态卡片 -->
+        <div class="ant-card">
+            <div class="card-header">
+                <h5><i class="bi bi-shield-check me-2"></i>当前状态</h5>
+                <span th:if="${authConfig?.isValid == true}" class="ant-tag ant-tag-success">
+                    <i class="bi bi-check-circle me-1"></i>认证有效
+                </span>
+                <span th:if="${authConfig?.isValid != true}" class="ant-tag ant-tag-error">
+                    <i class="bi bi-x-circle me-1"></i>认证无效
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="text-muted mb-1">配置时间</div>
+                        <div th:text="${authConfig?.updateTime ?: '未配置'}" class="fw-medium">未配置</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted mb-1">登录账号</div>
+                        <div th:text="${authConfig?.loginId} ?: '未配置'" class="fw-medium">未配置</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 认证配置表单 -->
+        <div class="ant-card">
+            <div class="card-header">
+                <h5><i class="bi bi-pencil-square me-2"></i>编辑认证信息</h5>
+            </div>
+            <div class="card-body">
+                <form id="authForm">
+                    <div class="ant-form-item">
+                        <label>会话ID (SID)</label>
+                        <textarea name="sid" class="ant-input" rows="5" 
+                                  th:text="${authConfig?.sid}" placeholder="输入会话ID"></textarea>
+                        <div class="form-text text-muted mt-1">从浏览器开发者工具中获取的会话标识</div>
+                    </div>
+                    <div class="ant-form-item">
+                        <label>Selenium配置文件路径</label>
+                        <input type="text" name="selenuimConfig" class="ant-input" 
+                               th:value="${authConfig?.selenuimConfig}" placeholder="/path/to/selenium_config.json">
+                        <div class="form-text text-muted mt-1">本地配置文件路径，如: /home/ubuntu/java_app/selenium_config.json</div>
+                    </div>
+                    <div class="ant-form-item">
+                        <label class="d-flex align-items-center gap-2" style="cursor: pointer;">
+                            <input type="checkbox" name="headlessMode" id="headlessMode"
+                                   th:checked="${authConfig?.headlessMode == true}" style="width: 16px; height: 16px;">
+                            <span>无头模式（后台运行，不显示浏览器窗口）</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="ant-btn ant-btn-primary">
+                        <i class="bi bi-save"></i> 保存配置
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 操作说明 -->
+        <div class="ant-card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle me-2"></i>操作说明</h5>
+            </div>
+            <div class="card-body">
+                <ol style="padding-left: 20px; margin-bottom: 0; line-height: 2;">
+                    <li>登录藏宝阁网站后，从浏览器开发者工具中获取会话ID (SID)</li>
+                    <li>将SID粘贴到上方表单中</li>
+                    <li>Selenium配置文件路径通常为：<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">/home/ubuntu/java_app/selenium_config.json</code></li>
+                    <li>保存后，新的爬取任务将使用新的认证信息</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script th:fragment="scripts">
+        document.getElementById('authForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                sid: this.querySelector('[name="sid"]').value,
+                selenuimConfig: this.querySelector('[name="selenuimConfig"]').value,
+                headlessMode: this.querySelector('[name="headlessMode"]').checked
+            };
+            
+            fetch('/admin/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            })
+            .catch(e => alert('保存失败: ' + e.message));
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='仪表盘', active='dashboard')}">
+<head>
+    <title>仪表盘</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h4>仪表盘</h4>
+            <div class="breadcrumb">首页 / 仪表盘</div>
+        </div>
+        
+        <!-- 认证状态卡片 -->
+        <div class="ant-card">
+            <div class="card-header">
+                <h5><i class="bi bi-shield-check me-2"></i>认证状态</h5>
+                <span th:if="${authConfig?.isValid == true}" class="ant-tag ant-tag-success">
+                    <i class="bi bi-check-circle me-1"></i>认证有效
+                </span>
+                <span th:if="${authConfig?.isValid != true}" class="ant-tag ant-tag-error">
+                    <i class="bi bi-x-circle me-1"></i>认证无效
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted mb-1">配置时间</div>
+                        <div th:text="${authConfig?.updateTime ?: '未配置'}" class="fw-medium">未配置</div>
+                    </div>
+                    <div>
+                        <button class="ant-btn ant-btn-primary" onclick="startScheduler()">
+                            <i class="bi bi-play-fill"></i> 启动调度器
+                        </button>
+                        <button class="ant-btn ant-btn-danger ms-2" onclick="stopScheduler()">
+                            <i class="bi bi-stop-fill"></i> 停止调度器
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="bi bi-list-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.totalTasks}">0</div>
+                    <div class="stat-label">总任务</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon gray"><i class="bi bi-hourglass-split"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.pendingCount}">0</div>
+                    <div class="stat-label">等待中</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon cyan"><i class="bi bi-play-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.runningCount}">0</div>
+                    <div class="stat-label">执行中</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.successCount}">0</div>
+                    <div class="stat-label">成功</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.failedCount}">0</div>
+                    <div class="stat-label">失败</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="bi bi-collection"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.petCount}">0</div>
+                    <div class="stat-label">宠物数据</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近任务 -->
+        <div class="ant-card">
+            <div class="card-header">
+                <h5><i class="bi bi-clock-history me-2"></i>最近任务</h5>
+                <a href="/admin/tasks" class="ant-btn">查看全部</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="ant-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                            <th>URL</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="task : ${recentTasks}">
+                            <td th:text="${task.id}">1</td>
+                            <td>
+                                <span class="ant-tag" th:classappend="${task.taskType == 'LIST_PAGE'} ? 'ant-tag-default' : 'ant-tag-processing'"
+                                      th:text="${task.taskType == 'LIST_PAGE'} ? '列表页' : '详情页'">详情页</span>
+                            </td>
+                            <td>
+                                <span th:switch="${task.status}" class="ant-tag">
+                                    <span th:case="'PENDING'" class="ant-tag-default">等待中</span>
+                                    <span th:case="'RUNNING'" class="ant-tag-processing">执行中</span>
+                                    <span th:case="'SUCCESS'" class="ant-tag-success">成功</span>
+                                    <span th:case="'FAILED'" class="ant-tag-error">失败</span>
+                                    <span th:case="'STOPPED'" class="ant-tag-warning">已停止</span>
+                                </span>
+                            </td>
+                            <td>
+                                <a th:href="${task.url}" target="_blank" th:text="${#strings.abbreviate(task.url, 40)}" style="color: #1890ff; text-decoration: none;">URL</a>
+                            </td>
+                            <td th:text="${#dates.format(task.createTime, 'MM-dd HH:mm')}">01-01 12:00</td>
+                            <td>
+                                <button th:if="${task.status == 'FAILED'}" class="ant-btn ant-btn-primary ant-btn-sm" 
+                                        th:data-task-id="${task.id}" onclick="retryTask(this.getAttribute('data-task-id'))">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                                <button th:if="${task.status == 'RUNNING'}" class="ant-btn ant-btn-danger ant-btn-sm"
+                                        th:data-task-id="${task.id}" onclick="stopTask(this.getAttribute('data-task-id'))">
+                                    <i class="bi bi-stop-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:fragment="scripts">
+        function startScheduler() {
+            fetch('/task/startScheduler', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message || '操作成功');
+                    location.reload();
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+
+        function stopScheduler() {
+            fetch('/task/stopScheduler', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message || '操作成功');
+                    location.reload();
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+
+        function retryTask(taskId) {
+            fetch('/admin/api/task/' + taskId + '/retry', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) location.reload();
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+
+        function stopTask(taskId) {
+            fetch('/admin/api/task/' + taskId + '/stop', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) location.reload();
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+    </script>
+</body>
+</html>
