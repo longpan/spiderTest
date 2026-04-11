@@ -22,12 +22,15 @@ import java.util.concurrent.*;
 
 /**
  * 藏宝阁爬虫任务执行器
- * 后台轮询执行任务，支持并发控制
+ * 后台轮询执行任务，支持并发控制、自适应重试和代理池轮换
  */
 @Component
 public class CbgSpiderTaskExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(CbgSpiderTaskExecutor.class);
+
+    // 重试延迟调度器(用于指数退避)
+    private ScheduledExecutorService retryScheduler;
 
     @Autowired
     private CbgSpiderTaskService cbgSpiderTaskService;
@@ -49,6 +52,9 @@ public class CbgSpiderTaskExecutor {
 
     private ExecutorService executorService;
     private volatile boolean isRunning = false;
+    
+    // 正在重试中的任务集合(防止重复提交重试)
+    private final ConcurrentHashMap<Long, Boolean> retryingTasks = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {

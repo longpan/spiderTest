@@ -110,6 +110,18 @@ public class AdminController {
         
         long totalPages = (pageResult.getTotal() + size - 1) / size;
         
+        // 统计数据（用于任务数量卡片）
+        Map<String, Object> stats = new HashMap<>();
+        List<CbgSpiderTask> allTasks = cbgSpiderTaskService.listTasks(null);
+        stats.put("totalTasks", allTasks.size());
+        stats.put("pendingCount", allTasks.stream().filter(t -> "PENDING".equals(t.getStatus())).count());
+        stats.put("runningCount", allTasks.stream().filter(t -> "RUNNING".equals(t.getStatus())).count());
+        stats.put("successCount", allTasks.stream().filter(t -> "SUCCESS".equals(t.getStatus())).count());
+        stats.put("failedCount", allTasks.stream().filter(t -> "FAILED".equals(t.getStatus())).count());
+        Integer petCount = mhPetItemDAO.selectCount(new QueryWrapper<>());
+        stats.put("petCount", petCount);
+        model.addAttribute("stats", stats);
+        
         model.addAttribute("tasks", pageResult.getRecords());
         model.addAttribute("total", pageResult.getTotal());
         model.addAttribute("totalPages", totalPages > 0 ? totalPages : 1);
@@ -229,6 +241,60 @@ public class AdminController {
     }
 
     // ============ API接口 ============
+
+    /**
+     * 创建列表页爬取任务
+     */
+    @PostMapping("/api/task/create/list")
+    @ResponseBody
+    public Map<String, Object> createListTask(@RequestParam String url, @RequestParam(defaultValue = "1") int maxPage) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            if (url == null || url.trim().isEmpty()) {
+                result.put("success", false);
+                result.put("message", "URL不能为空");
+                return result;
+            }
+            cbgSpiderTaskService.createListPageTasks(url.trim(), maxPage);
+            result.put("success", true);
+            result.put("message", "列表页任务创建成功,共创建 " + maxPage + " 个页任务");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "创建失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 创建详情页爬取任务
+     */
+    @PostMapping("/api/task/create/detail")
+    @ResponseBody
+    public Map<String, Object> createDetailTask(@RequestParam String url, 
+                                                  @RequestParam(required = false) String itemCode) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            if (url == null || url.trim().isEmpty()) {
+                result.put("success", false);
+                result.put("message", "URL不能为空");
+                return result;
+            }
+            
+            Map<String, Object> extras = new HashMap<>();
+            extras.put("detailUrl", url.trim());
+            if (itemCode != null && !itemCode.isEmpty()) {
+                extras.put("itemCode", itemCode.trim());
+            }
+            
+            cbgSpiderTaskService.createDetailPageTask(null, url.trim(), extras.size() > 0 ? extras : null);
+            result.put("success", true);
+            result.put("message", "详情页任务创建成功");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "创建失败: " + e.getMessage());
+        }
+        return result;
+    }
 
     /**
      * 更新认证配置

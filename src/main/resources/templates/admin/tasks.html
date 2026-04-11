@@ -138,6 +138,52 @@
             </div>
         </div>
 
+        <!-- 统计卡片 -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="bi bi-list-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.totalTasks}">0</div>
+                    <div class="stat-label">总任务</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon gray"><i class="bi bi-hourglass-split"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.pendingCount}">0</div>
+                    <div class="stat-label">等待中</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon cyan"><i class="bi bi-play-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.runningCount}">0</div>
+                    <div class="stat-label">执行中</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.successCount}">0</div>
+                    <div class="stat-label">成功</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.failedCount}">0</div>
+                    <div class="stat-label">失败</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="bi bi-collection"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" th:text="${stats.petCount}">0</div>
+                    <div class="stat-label">宠物数据</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 搜索卡片 -->
         <div class="ant-card">
             <div class="card-body">

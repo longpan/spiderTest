@@ -146,15 +146,10 @@ public class MyWebDriverPool {
         options.addArguments("--window-size=1920,1050");
         options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36");
 
-        String host = "y843.kdltps.com";
-        int port = 15818;
-        String proxyServer = "y843.kdltps.com:15818";
-       // options.addArguments("--proxy-server=http://"+host+":"+port);//**此处设置代理**
-        options.addArguments("no-sandbox");
-
         // 隧道域名: 端口号
         //String proxyServer = "y843.kdltps.com:15818";
-        Proxy proxy = new Proxy().setHttpProxy(proxyServer).setSslProxy(proxyServer);
+        //Proxy proxy = new Proxy().setHttpProxy(proxyServer).setSslProxy(proxyServer);
+        options.addArguments("no-sandbox");
         sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS,
                 cliArgsCap);
 
