@@ -2,6 +2,8 @@ package com.ongl.chen.utils.spider.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
 import com.ongl.chen.utils.spider.beans.cbg.CbgSpiderTask;
 import com.ongl.chen.utils.spider.dao.MhPetItemDAO;
@@ -224,5 +226,37 @@ public class CbgSpiderTaskServiceImpl implements CbgSpiderTaskService {
         
         wrapper.orderByDesc("createTime");
         return cbgSpiderTaskDAO.selectList(wrapper);
+    }
+
+    @Override
+    public IPage<CbgSpiderTask> listTasksPage(Map<String, Object> params) {
+        int page = params.containsKey("page") ? (int) params.get("page") : 1;
+        int size = params.containsKey("size") ? (int) params.get("size") : 20;
+        
+        QueryWrapper<CbgSpiderTask> wrapper = new QueryWrapper<>();
+        
+        if (params != null) {
+            if (params.containsKey("status")) {
+                wrapper.eq("status", params.get("status"));
+            }
+            if (params.containsKey("taskType")) {
+                wrapper.eq("taskType", params.get("taskType"));
+            }
+            if (params.containsKey("itemCode")) {
+                wrapper.eq("itemCode", params.get("itemCode"));
+            }
+            
+            // 排序
+            String sortField = params.containsKey("sortField") ? (String) params.get("sortField") : "createTime";
+            String sortOrder = params.containsKey("sortOrder") ? (String) params.get("sortOrder") : "desc";
+            
+            if ("asc".equalsIgnoreCase(sortOrder)) {
+                wrapper.orderByAsc(sortField);
+            } else {
+                wrapper.orderByDesc(sortField);
+            }
+        }
+        
+        return cbgSpiderTaskDAO.selectPage(new Page<>(page, size), wrapper);
     }
 }

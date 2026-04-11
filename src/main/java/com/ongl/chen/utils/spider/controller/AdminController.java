@@ -14,9 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -85,21 +83,54 @@ public class AdminController {
     public String tasks(@RequestParam(defaultValue = "1") int page,
                        @RequestParam(defaultValue = "20") int size,
                        @RequestParam(required = false) String status,
+                       @RequestParam(required = false) String taskType,
+                       @RequestParam(defaultValue = "createTime") String sortField,
+                       @RequestParam(defaultValue = "desc") String sortOrder,
                        Model model) {
         
+        // 验证排序字段
+        String validSortField = validateTaskSortField(sortField);
+        boolean isAsc = "asc".equalsIgnoreCase(sortOrder);
+        
+        // 构建查询参数
         Map<String, Object> params = new HashMap<>();
         if (status != null && !status.isEmpty()) {
             params.put("status", status);
         }
+        if (taskType != null && !taskType.isEmpty()) {
+            params.put("taskType", taskType);
+        }
+        params.put("sortField", validSortField);
+        params.put("sortOrder", isAsc ? "asc" : "desc");
+        params.put("page", page);
+        params.put("size", size);
         
-        List<CbgSpiderTask> tasks = cbgSpiderTaskService.listTasks(params);
+        // 分页查询
+        IPage<CbgSpiderTask> pageResult = cbgSpiderTaskService.listTasksPage(params);
         
-        model.addAttribute("tasks", tasks);
-        model.addAttribute("status", status);
+        long totalPages = (pageResult.getTotal() + size - 1) / size;
+        
+        model.addAttribute("tasks", pageResult.getRecords());
+        model.addAttribute("total", pageResult.getTotal());
+        model.addAttribute("totalPages", totalPages > 0 ? totalPages : 1);
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
+        model.addAttribute("status", status);
+        model.addAttribute("taskType", taskType);
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortOrder", sortOrder);
         
         return "admin/tasks";
+    }
+    
+    /**
+     * 验证任务排序字段
+     */
+    private String validateTaskSortField(String sortField) {
+        Set<String> validFields = new HashSet<>(Arrays.asList(
+                "createTime", "id", "status", "taskType", "retryCount"
+        ));
+        return validFields.contains(sortField) ? sortField : "createTime";
     }
 
     /**
@@ -110,6 +141,8 @@ public class AdminController {
                       @RequestParam(defaultValue = "100") int size,
                       @RequestParam(required = false) String name,
                       @RequestParam(required = false) String serverName,
+                      @RequestParam(defaultValue = "updateTime") String sortField,
+                      @RequestParam(defaultValue = "desc") String sortOrder,
                       Model model) {
         
         QueryWrapper<MhPetItem> wrapper = new QueryWrapper<>();
@@ -119,11 +152,46 @@ public class AdminController {
         if (serverName != null && !serverName.isEmpty()) {
             wrapper.eq("serverName", serverName);
         }
-        wrapper.orderByDesc("updateTime");
+        
+        // 验证排序字段，防止SQL注入
+        String validSortField = validateSortField(sortField);
+        boolean isAsc = "asc".equalsIgnoreCase(sortOrder);
+        
+        if (isAsc) {
+            wrapper.orderByAsc(validSortField);
+        } else {
+            wrapper.orderByDesc(validSortField);
+        }
         
         IPage<MhPetItem> pageResult = mhPetItemDAO.selectPage(new Page<>(page, size), wrapper);
         
         long totalPages = (pageResult.getTotal() + size - 1) / size;
+        
+        // 查询可选的宠物名称列表（按数量排序，前50个）
+        List<Map<String, Object>> petNameCountList = mhPetItemDAO.selectMaps(
+                new QueryWrapper<MhPetItem>()
+                        .select("name", "COUNT(*) as count")
+                        .isNotNull("name")
+                        .ne("name", "")
+                        .groupBy("name")
+                        .orderByDesc("count")
+                        .last("LIMIT 50")
+        );
+        List<Map<String, Object>> petNames = petNameCountList.stream()
+                .map(m -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", m.get("name"));
+                    map.put("count", m.get("count"));
+                    return map;
+                })
+                .collect(Collectors.toList());
+        
+        // 查询可选的服务器列表（去重）
+        QueryWrapper<MhPetItem> serverWrapper = new QueryWrapper<>();
+        serverWrapper.select("DISTINCT serverName").isNotNull("serverName").ne("serverName", "").orderByAsc("serverName");
+        List<String> serverNames = mhPetItemDAO.selectObjs(serverWrapper).stream()
+                .map(Object::toString)
+                .collect(Collectors.toList());
         
         model.addAttribute("pets", pageResult.getRecords());
         model.addAttribute("total", pageResult.getTotal());
@@ -132,8 +200,22 @@ public class AdminController {
         model.addAttribute("pageSize", size);
         model.addAttribute("name", name);
         model.addAttribute("serverName", serverName);
+        model.addAttribute("petNames", petNames);
+        model.addAttribute("serverNames", serverNames);
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortOrder", sortOrder);
         
         return "admin/pets";
+    }
+    
+    /**
+     * 验证排序字段，防止SQL注入
+     */
+    private String validateSortField(String sortField) {
+        Set<String> validFields = new HashSet<>(Arrays.asList(
+                "price", "collect", "skillNum", "updateTime", "id", "name", "level", "code"
+        ));
+        return validFields.contains(sortField) ? sortField : "updateTime";
     }
 
     /**

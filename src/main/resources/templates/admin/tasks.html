@@ -2,6 +2,94 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='任务管理', active='tasks')}">
 <head>
     <title>任务管理</title>
+    <style>
+        /* 表格滚动容器 */
+        .table-scroll-container {
+            max-height: calc(100vh - 380px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* 自定义滚动条 */
+        .table-scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* 固定表头 */
+        .table-scroll-container .ant-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .table-scroll-container .ant-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .table-scroll-container .ant-table thead th {
+            background: #fafafa;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        /* 分页包装器 */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+        .pagination-info {
+            font-size: 14px;
+            color: #595959;
+        }
+        .pagination-info strong {
+            color: #262626;
+            font-weight: 600;
+        }
+        
+        /* 可排序表头 */
+        .sortable-header {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable-header:hover {
+            background: #e6f7ff !important;
+        }
+        .sort-link {
+            color: #262626;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+        .sort-link:hover {
+            color: #1890ff;
+            text-decoration: none;
+        }
+        .sort-link .bi {
+            font-size: 12px;
+            color: #bfbfbf;
+        }
+        .sort-link .bi-sort-up,
+        .sort-link .bi-sort-down {
+            color: #1890ff;
+        }
+    </style>
 </head>
 <body>
     <div th:fragment="content">
@@ -11,11 +99,50 @@
             <div class="breadcrumb">首页 / 任务管理</div>
         </div>
 
-        <!-- 筛选卡片 -->
+        <!-- 创建任务卡片 -->
+        <div class="ant-card">
+            <div class="card-header">
+                <h5><i class="bi bi-plus-circle me-2"></i>创建爬取任务</h5>
+            </div>
+            <div class="card-body">
+                <form id="createTaskForm" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">任务类型</label>
+                        <select name="taskType" class="ant-input" id="createTaskType" onchange="toggleCreateForm()">
+                            <option value="LIST_PAGE">列表页任务</option>
+                            <option value="DETAIL_PAGE">详情页任务</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="listPageUrlGroup">
+                        <label class="form-label">列表页URL</label>
+                        <input type="text" name="url" class="ant-input" placeholder="输入藏宝阁列表页URL">
+                    </div>
+                    <div class="col-md-3" id="listPageMaxPageGroup">
+                        <label class="form-label">最大页数</label>
+                        <input type="number" name="maxPage" class="ant-input" value="1" min="1" max="100">
+                    </div>
+                    <div class="col-md-6" id="detailPageUrlGroup" style="display: none;">
+                        <label class="form-label">详情页URL</label>
+                        <input type="text" name="detailUrl" class="ant-input" placeholder="输入藏宝阁详情页URL">
+                    </div>
+                    <div class="col-md-3" id="detailPageItemCodeGroup" style="display: none;">
+                        <label class="form-label">物品编号</label>
+                        <input type="text" name="itemCode" class="ant-input" placeholder="输入物品编号">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="ant-btn ant-btn-primary" onclick="createTask()">
+                            <i class="bi bi-plus-lg"></i> 创建任务
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 搜索卡片 -->
         <div class="ant-card">
             <div class="card-body">
                 <form method="get" class="row g-3 align-items-end">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">任务状态</label>
                         <select name="status" class="ant-input">
                             <option value="">全部状态</option>
@@ -26,7 +153,39 @@
                             <option value="STOPPED" th:selected="${status == 'STOPPED'}">已停止</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label class="form-label">任务类型</label>
+                        <select name="taskType" class="ant-input">
+                            <option value="">全部类型</option>
+                            <option value="LIST_PAGE" th:selected="${taskType == 'LIST_PAGE'}">列表页</option>
+                            <option value="DETAIL_PAGE" th:selected="${taskType == 'DETAIL_PAGE'}">详情页</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">每页条数</label>
+                        <select name="size" class="ant-input">
+                            <option value="20" th:selected="${pageSize == 20}">20条</option>
+                            <option value="50" th:selected="${pageSize == 50}">50条</option>
+                            <option value="100" th:selected="${pageSize == 100}">100条</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">排序字段</label>
+                        <select name="sortField" class="ant-input">
+                            <option value="createTime" th:selected="${sortField == 'createTime'}">创建时间</option>
+                            <option value="id" th:selected="${sortField == 'id'}">ID</option>
+                            <option value="status" th:selected="${sortField == 'status'}">状态</option>
+                            <option value="retryCount" th:selected="${sortField == 'retryCount'}">重试次数</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">排序方向</label>
+                        <select name="sortOrder" class="ant-input">
+                            <option value="desc" th:selected="${sortOrder == 'desc'}">降序</option>
+                            <option value="asc" th:selected="${sortOrder == 'asc'}">升序</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <button type="submit" class="ant-btn ant-btn-primary">
                             <i class="bi bi-search"></i> 查询
                         </button>
@@ -40,66 +199,109 @@
         <div class="ant-card">
             <div class="card-header">
                 <h5><i class="bi bi-list-task me-2"></i>任务列表</h5>
-                <span class="text-muted" th:text="'共 ' + ${#lists.size(tasks)} + ' 条'">共 0 条</span>
+                <span class="text-muted" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
             </div>
             <div class="card-body p-0">
-                <table class="ant-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 60px;">ID</th>
-                            <th style="width: 90px;">类型</th>
-                            <th style="width: 90px;">状态</th>
-                            <th style="width: 120px;">物品编号</th>
-                            <th>URL</th>
-                            <th style="width: 80px;">重试</th>
-                            <th style="width: 150px;">错误信息</th>
-                            <th style="width: 100px;">创建时间</th>
-                            <th style="width: 120px;">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="task : ${tasks}">
-                            <td th:text="${task.id}">1</td>
-                            <td>
-                                <span class="ant-tag" th:classappend="${task.taskType == 'LIST_PAGE'} ? 'ant-tag-default' : 'ant-tag-processing'"
-                                      th:text="${task.taskType == 'LIST_PAGE'} ? '列表页' : '详情页'">详情页</span>
-                            </td>
-                            <td>
-                                <span th:switch="${task.status}" class="ant-tag">
-                                    <span th:case="'PENDING'" class="ant-tag-default">等待中</span>
-                                    <span th:case="'RUNNING'" class="ant-tag-processing">执行中</span>
-                                    <span th:case="'SUCCESS'" class="ant-tag-success">成功</span>
-                                    <span th:case="'FAILED'" class="ant-tag-error">失败</span>
-                                    <span th:case="'STOPPED'" class="ant-tag-warning">已停止</span>
-                                </span>
-                            </td>
-                            <td th:text="${task.itemCode} ?: '-'" style="font-family: monospace;">-</td>
-                            <td>
-                                <a th:href="${task.url}" target="_blank" th:text="${#strings.abbreviate(task.url, 35)}" style="color: #1890ff; text-decoration: none;">URL</a>
-                            </td>
-                            <td th:text="${task.retryCount}">0</td>
-                            <td>
-                                <span th:if="${task.result}" th:text="${#strings.abbreviate(task.result, 20)}" 
-                                      style="color: #ff4d4f; cursor: pointer;" th:data-error="${task.result}" onclick="alert(this.getAttribute('data-error'))">-</span>
-                                <span th:if="${task.result == null}">-</span>
-                            </td>
-                            <td th:text="${#dates.format(task.createTime, 'MM-dd HH:mm')}">01-01 12:00</td>
-                            <td>
-                                <button th:if="${task.status == 'FAILED' or task.status == 'STOPPED'}" 
-                                        class="ant-btn ant-btn-primary ant-btn-sm" th:data-task-id="${task.id}" onclick="retryTask(this.getAttribute('data-task-id'))" title="重试">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                                <button th:if="${task.status == 'RUNNING'}" class="ant-btn ant-btn-danger ant-btn-sm"
-                                        th:data-task-id="${task.id}" onclick="stopTask(this.getAttribute('data-task-id'))" title="停止">
-                                    <i class="bi bi-stop-fill"></i>
-                                </button>
-                                <button class="ant-btn ant-btn-sm ms-1" th:data-task-id="${task.id}" onclick="showDetail(this.getAttribute('data-task-id'))" title="详情">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- 表格容器带滚动 -->
+                <div class="table-scroll-container">
+                    <table class="ant-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">ID</th>
+                                <th style="width: 90px;">类型</th>
+                                <th style="width: 90px;">状态</th>
+                                <th style="width: 120px;">物品编号</th>
+                                <th>URL</th>
+                                <th style="width: 80px;">重试</th>
+                                <th style="width: 150px;">错误信息</th>
+                                <th style="width: 120px;" class="sortable-header">
+                                    <a th:href="@{/admin/tasks(page=1, size=${pageSize}, status=${status}, taskType=${taskType}, sortField='createTime', sortOrder=${sortField == 'createTime' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
+                                        创建时间
+                                        <i th:if="${sortField == 'createTime'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
+                                        <i th:unless="${sortField == 'createTime'}" class="bi bi-filter"></i>
+                                    </a>
+                                </th>
+                                <th style="width: 120px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="task : ${tasks}">
+                                <td th:text="${task.id}">1</td>
+                                <td>
+                                    <span class="ant-tag" th:classappend="${task.taskType == 'LIST_PAGE'} ? 'ant-tag-default' : 'ant-tag-processing'"
+                                          th:text="${task.taskType == 'LIST_PAGE'} ? '列表页' : '详情页'">详情页</span>
+                                </td>
+                                <td>
+                                    <span th:switch="${task.status}" class="ant-tag">
+                                        <span th:case="'PENDING'" class="ant-tag-default">等待中</span>
+                                        <span th:case="'RUNNING'" class="ant-tag-processing">执行中</span>
+                                        <span th:case="'SUCCESS'" class="ant-tag-success">成功</span>
+                                        <span th:case="'FAILED'" class="ant-tag-error">失败</span>
+                                        <span th:case="'STOPPED'" class="ant-tag-warning">已停止</span>
+                                    </span>
+                                </td>
+                                <td th:text="${task.itemCode} ?: '-'" style="font-family: monospace;">-</td>
+                                <td>
+                                    <a th:href="${task.url}" target="_blank" th:text="${#strings.abbreviate(task.url, 35)}" style="color: #1890ff; text-decoration: none;">URL</a>
+                                </td>
+                                <td th:text="${task.retryCount}">0</td>
+                                <td>
+                                    <span th:if="${task.result}" th:text="${#strings.abbreviate(task.result, 20)}" 
+                                          style="color: #ff4d4f; cursor: pointer;" th:data-error="${task.result}" onclick="alert(this.getAttribute('data-error'))">-</span>
+                                    <span th:if="${task.result == null}">-</span>
+                                </td>
+                                <td th:text="${#dates.format(task.createTime, 'MM-dd HH:mm')}">01-01 12:00</td>
+                                <td>
+                                    <button th:if="${task.status == 'FAILED' or task.status == 'STOPPED'}" 
+                                            class="ant-btn ant-btn-primary ant-btn-sm" th:data-task-id="${task.id}" onclick="retryTask(this.getAttribute('data-task-id'))" title="重试">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                    <button th:if="${task.status == 'RUNNING'}" class="ant-btn ant-btn-danger ant-btn-sm"
+                                            th:data-task-id="${task.id}" onclick="stopTask(this.getAttribute('data-task-id'))" title="停止">
+                                        <i class="bi bi-stop-fill"></i>
+                                    </button>
+                                    <button class="ant-btn ant-btn-sm ms-1" th:data-task-id="${task.id}" onclick="showDetail(this.getAttribute('data-task-id'))" title="详情">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination-wrapper" th:if="${totalPages != null and totalPages > 1}">
+                    <div class="pagination-info">
+                        <span>共 <strong th:text="${total}">0</strong> 条</span>
+                        <span class="ms-3">第 <strong th:text="${currentPage}">1</strong> / <strong th:text="${totalPages}">1</strong> 页</span>
+                    </div>
+                    <div class="ant-pagination">
+                        <a th:href="@{/admin/tasks(page=1, size=${pageSize}, status=${status}, taskType=${taskType}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                           th:classappend="${currentPage <= 1} ? 'disabled'" 
+                           th:style="${currentPage <= 1} ? 'opacity: 0.5; pointer-events: none;' : ''">首页</a>
+                        
+                        <a th:href="@{/admin/tasks(page=${currentPage - 1}, size=${pageSize}, status=${status}, taskType=${taskType}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                           th:classappend="${currentPage <= 1} ? 'disabled'" 
+                           th:style="${currentPage <= 1} ? 'opacity: 0.5; pointer-events: none;' : ''">上一页</a>
+                        
+                        <!-- 页码显示 - 最多显示5个页码 -->
+                        <th:block th:with="start=${currentPage > 3 ? (currentPage + 2 > totalPages ? totalPages - 4 : currentPage - 2) : 1},
+                                           end=${start + 4 > totalPages ? totalPages : start + 4}">
+                            <a th:each="i : ${#numbers.sequence(start > 0 ? start : 1, end)}"
+                               th:href="@{/admin/tasks(page=${i}, size=${pageSize}, status=${status}, taskType=${taskType}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                               th:text="${i}" 
+                               th:classappend="${i == currentPage} ? 'active'">1</a>
+                        </th:block>
+                        
+                        <a th:href="@{/admin/tasks(page=${currentPage + 1}, size=${pageSize}, status=${status}, taskType=${taskType}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                           th:classappend="${currentPage >= totalPages} ? 'disabled'"
+                           th:style="${currentPage >= totalPages} ? 'opacity: 0.5; pointer-events: none;' : ''">下一页</a>
+                        
+                        <a th:href="@{/admin/tasks(page=${totalPages}, size=${pageSize}, status=${status}, taskType=${taskType}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                           th:classappend="${currentPage >= totalPages} ? 'disabled'"
+                           th:style="${currentPage >= totalPages} ? 'opacity: 0.5; pointer-events: none;' : ''">末页</a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -120,6 +322,67 @@
     </div>
 
     <script th:fragment="scripts">
+        // 切换创建任务表单显示
+        function toggleCreateForm() {
+            const taskType = document.getElementById('createTaskType').value;
+            if (taskType === 'LIST_PAGE') {
+                document.getElementById('listPageUrlGroup').style.display = 'block';
+                document.getElementById('listPageMaxPageGroup').style.display = 'block';
+                document.getElementById('detailPageUrlGroup').style.display = 'none';
+                document.getElementById('detailPageItemCodeGroup').style.display = 'none';
+            } else {
+                document.getElementById('listPageUrlGroup').style.display = 'none';
+                document.getElementById('listPageMaxPageGroup').style.display = 'none';
+                document.getElementById('detailPageUrlGroup').style.display = 'block';
+                document.getElementById('detailPageItemCodeGroup').style.display = 'block';
+            }
+        }
+        
+        // 创建任务
+        function createTask() {
+            const taskType = document.getElementById('createTaskType').value;
+            const form = document.getElementById('createTaskForm');
+            const formData = new FormData(form);
+            
+            if (taskType === 'LIST_PAGE') {
+                const url = formData.get('url');
+                const maxPage = formData.get('maxPage');
+                
+                if (!url || url.trim() === '') {
+                    alert('请输入列表页URL');
+                    return;
+                }
+                
+                fetch('/admin/api/task/create/list?url=' + encodeURIComponent(url) + '&maxPage=' + maxPage, { 
+                    method: 'POST' 
+                })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) location.reload();
+                })
+                .catch(e => alert('创建失败: ' + e.message));
+            } else {
+                const detailUrl = formData.get('detailUrl');
+                const itemCode = formData.get('itemCode');
+                
+                if (!detailUrl || detailUrl.trim() === '') {
+                    alert('请输入详情页URL');
+                    return;
+                }
+                
+                fetch('/admin/api/task/create/detail?url=' + encodeURIComponent(detailUrl) + '&itemCode=' + encodeURIComponent(itemCode || ''), { 
+                    method: 'POST' 
+                })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) location.reload();
+                })
+                .catch(e => alert('创建失败: ' + e.message));
+            }
+        }
+        
         function retryTask(taskId) {
             if (!confirm('确定要重试该任务吗？')) return;
             fetch('/admin/api/task/' + taskId + '/retry', { method: 'POST' })

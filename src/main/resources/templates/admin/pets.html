@@ -2,6 +2,64 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='宠物数据', active='pets')}">
 <head>
     <title>宠物数据</title>
+    <style>
+        /* 表格滚动容器 */
+        .table-scroll-container {
+            max-height: calc(100vh - 380px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* 自定义滚动条 */
+        .table-scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* 固定表头 */
+        .table-scroll-container .ant-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .table-scroll-container .ant-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .table-scroll-container .ant-table thead th {
+            background: #fafafa;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        /* 分页包装器 */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+        .pagination-info {
+            font-size: 14px;
+            color: #595959;
+        }
+        .pagination-info strong {
+            color: #262626;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     <div th:fragment="content">
@@ -17,11 +75,17 @@
                 <form method="get" class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label">宠物名称</label>
-                        <input type="text" name="name" class="ant-input" th:value="${name}" placeholder="输入宠物名称">
+                        <select name="name" class="ant-input">
+                            <option value="">全部</option>
+                            <option th:each="n : ${petNames}" th:value="${n.name}" th:text="${n.name} + ' (' + ${n.count} + ')'" th:selected="${n.name == name}"></option>
+                        </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">服务器</label>
-                        <input type="text" name="serverName" class="ant-input" th:value="${serverName}" placeholder="输入服务器名称">
+                        <select name="serverName" class="ant-input">
+                            <option value="">全部</option>
+                            <option th:each="s : ${serverNames}" th:value="${s}" th:text="${s}" th:selected="${s == serverName}"></option>
+                        </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">每页条数</label>
@@ -32,7 +96,23 @@
                             <option value="500" th:selected="${pageSize == 500}">500条</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-2">
+                        <label class="form-label">排序字段</label>
+                        <select name="sortField" class="ant-input">
+                            <option value="updateTime" th:selected="${sortField == 'updateTime'}">更新时间</option>
+                            <option value="price" th:selected="${sortField == 'price'}">价格</option>
+                            <option value="collect" th:selected="${sortField == 'collect'}">收藏数</option>
+                            <option value="skillNum" th:selected="${sortField == 'skillNum'}">技能数</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">排序方向</label>
+                        <select name="sortOrder" class="ant-input">
+                            <option value="desc" th:selected="${sortOrder == 'desc'}">降序</option>
+                            <option value="asc" th:selected="${sortOrder == 'asc'}">升序</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <button type="submit" class="ant-btn ant-btn-primary">
                             <i class="bi bi-search"></i> 查询
                         </button>
@@ -55,20 +135,47 @@
                         <thead>
                             <tr>
                                 <th style="width: 60px;">ID</th>
-                                <th style="width: 120px;">编号</th>
+                                <th style="width: 140px;">编号</th>
                                 <th>名称</th>
                                 <th style="width: 80px;">等级</th>
                                 <th>服务器</th>
-                                <th style="width: 100px;">价格</th>
-                                <th style="width: 80px;">技能数</th>
-                                <th style="width: 100px;">更新时间</th>
-                                <th style="width: 140px;">操作</th>
+                                <th style="width: 100px;" class="sortable-header">
+                                    <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='price', sortOrder=${sortField == 'price' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
+                                        价格
+                                        <i th:if="${sortField == 'price'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
+                                        <i th:unless="${sortField == 'price'}" class="bi bi-filter"></i>
+                                    </a>
+                                </th>
+                                <th style="width: 70px;" class="sortable-header">
+                                    <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='collect', sortOrder=${sortField == 'collect' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
+                                        收藏
+                                        <i th:if="${sortField == 'collect'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
+                                        <i th:unless="${sortField == 'collect'}" class="bi bi-filter"></i>
+                                    </a>
+                                </th>
+                                <th style="width: 80px;" class="sortable-header">
+                                    <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='skillNum', sortOrder=${sortField == 'skillNum' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
+                                        技能数
+                                        <i th:if="${sortField == 'skillNum'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
+                                        <i th:unless="${sortField == 'skillNum'}" class="bi bi-filter"></i>
+                                    </a>
+                                </th>
+                                <th style="width: 120px;">亮点1</th>
+                                <th style="width: 120px;">亮点2</th>
+                                <th style="width: 100px;" class="sortable-header">
+                                    <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='updateTime', sortOrder=${sortField == 'updateTime' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
+                                        更新时间
+                                        <i th:if="${sortField == 'updateTime'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
+                                        <i th:unless="${sortField == 'updateTime'}" class="bi bi-filter"></i>
+                                    </a>
+                                </th>
+                                <th style="width: 120px;">操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="pet : ${pets}">
                                 <td th:text="${pet.id}">1</td>
-                                <td th:text="${pet.code}" style="font-family: monospace; font-size: 13px;">-</td>
+                                <td th:text="${pet.code}" style="font-family: monospace; font-size: 12px;">-</td>
                                 <td>
                                     <span class="fw-medium" th:text="${pet.name} ?: '-'">-</span>
                                 </td>
@@ -83,7 +190,16 @@
                                     <span th:if="${pet.price == null}">-</span>
                                 </td>
                                 <td>
+                                    <span class="ant-tag ant-tag-default" th:text="${pet.collect} ?: '0'">0</span>
+                                </td>
+                                <td>
                                     <span class="ant-tag ant-tag-processing" th:text="${pet.skillNum} ?: '0'">0</span>
+                                </td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 110px; font-size: 12px;" th:text="${pet.lightSpot1} ?: '-'" title="${pet.lightSpot1}">-</span>
+                                </td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 110px; font-size: 12px;" th:text="${pet.lightSpot2} ?: '-'" title="${pet.lightSpot2}">-</span>
                                 </td>
                                 <td th:text="${#dates.format(pet.updateTime, 'MM-dd HH:mm')}">01-01 12:00</td>
                                 <td>
@@ -103,19 +219,37 @@
                 </div>
 
                 <!-- 分页 -->
-                <div class="ant-pagination" th:if="${totalPages != null and totalPages > 1}">
-                    <a th:href="@{/admin/pets(page=${currentPage - 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
-                       th:classappend="${currentPage <= 1} ? 'disabled'" 
-                       th:style="${currentPage <= 1} ? 'opacity: 0.5; pointer-events: none;' : ''">上一页</a>
-                    
-                    <a th:each="i : ${#numbers.sequence(1, totalPages)}"
-                       th:href="@{/admin/pets(page=${i}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
-                       th:text="${i}" 
-                       th:classappend="${i == currentPage} ? 'active'">1</a>
-                    
-                    <a th:href="@{/admin/pets(page=${currentPage + 1}, size=${pageSize}, name=${name}, serverName=${serverName})}" 
-                       th:classappend="${currentPage >= totalPages} ? 'disabled'"
-                       th:style="${currentPage >= totalPages} ? 'opacity: 0.5; pointer-events: none;' : ''">下一页</a>
+                <div class="pagination-wrapper" th:if="${totalPages != null and totalPages > 1}">
+                    <div class="pagination-info">
+                        <span>共 <strong th:text="${total}">0</strong> 条</span>
+                        <span class="ms-3">第 <strong th:text="${currentPage}">1</strong> / <strong th:text="${totalPages}">1</strong> 页</span>
+                    </div>
+                    <div class="ant-pagination">
+                        <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                           th:classappend="${currentPage <= 1} ? 'disabled'" 
+                           th:style="${currentPage <= 1} ? 'opacity: 0.5; pointer-events: none;' : ''">首页</a>
+                        
+                        <a th:href="@{/admin/pets(page=${currentPage - 1}, size=${pageSize}, name=${name}, serverName=${serverName}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                           th:classappend="${currentPage <= 1} ? 'disabled'" 
+                           th:style="${currentPage <= 1} ? 'opacity: 0.5; pointer-events: none;' : ''">上一页</a>
+                        
+                        <!-- 页码显示 - 最多显示5个页码 -->
+                        <th:block th:with="start=${currentPage > 3 ? (currentPage + 2 > totalPages ? totalPages - 4 : currentPage - 2) : 1},
+                                           end=${start + 4 > totalPages ? totalPages : start + 4}">
+                            <a th:each="i : ${#numbers.sequence(start > 0 ? start : 1, end)}"
+                               th:href="@{/admin/pets(page=${i}, size=${pageSize}, name=${name}, serverName=${serverName}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                               th:text="${i}" 
+                               th:classappend="${i == currentPage} ? 'active'">1</a>
+                        </th:block>
+                        
+                        <a th:href="@{/admin/pets(page=${currentPage + 1}, size=${pageSize}, name=${name}, serverName=${serverName}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                           th:classappend="${currentPage >= totalPages} ? 'disabled'"
+                           th:style="${currentPage >= totalPages} ? 'opacity: 0.5; pointer-events: none;' : ''">下一页</a>
+                        
+                        <a th:href="@{/admin/pets(page=${totalPages}, size=${pageSize}, name=${name}, serverName=${serverName}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+                           th:classappend="${currentPage >= totalPages} ? 'disabled'"
+                           th:style="${currentPage >= totalPages} ? 'opacity: 0.5; pointer-events: none;' : ''">末页</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -174,6 +308,54 @@
         .table-scroll-container .ant-table thead th {
             background: #fafafa;
             border-bottom: 2px solid #f0f0f0;
+        }
+        
+        /* 分页包装器 */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+        .pagination-info {
+            font-size: 14px;
+            color: #595959;
+        }
+        .pagination-info strong {
+            color: #262626;
+            font-weight: 600;
+        }
+        
+        /* 可排序表头 */
+        .sortable-header {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable-header:hover {
+            background: #e6f7ff !important;
+        }
+        .sort-link {
+            color: #262626;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+        .sort-link:hover {
+            color: #1890ff;
+            text-decoration: none;
+        }
+        .sort-link .bi {
+            font-size: 12px;
+            color: #bfbfbf;
+        }
+        .sort-link .bi-sort-up,
+        .sort-link .bi-sort-down {
+            color: #1890ff;
         }
     </style>
 

@@ -1,5 +1,6 @@
 package com.ongl.chen.utils.spider.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ongl.chen.utils.spider.beans.cbg.CbgSpiderTask;
 
 import java.util.List;
@@ -94,4 +95,9 @@ public interface CbgSpiderTaskService {
      * 查询任务列表
      */
     List<CbgSpiderTask> listTasks(Map<String, Object> params);
+
+    /**
+     * 分页查询任务列表
+     */
+    IPage<CbgSpiderTask> listTasksPage(Map<String, Object> params);
 }
