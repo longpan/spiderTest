@@ -40,6 +40,9 @@ public class CbgPetListPageProcessor implements PageProcessor {
         // 解析列表页
         List<Selectable> petList = page.getHtml().$("#soldList").xpath("tr").nodes();
         
+        // 记录创建的详情任务数量
+        int createdDetailCount = 0;
+
         for (Selectable petSelectable : petList) {
             List<String> links = petSelectable.links().all();
             if (links == null || links.isEmpty()) {
@@ -81,7 +84,19 @@ public class CbgPetListPageProcessor implements PageProcessor {
             Long parentTaskId = (Long) page.getRequest().getExtra("taskId");
             cbgSpiderTaskService.createDetailPageTask(parentTaskId, detailUrl, extras);
 
+            createdDetailCount++;
             System.out.println("Created detail task for: " + detailUrl);
+        }
+        
+        // 如果当前页面无法提取到任何详情任务，则将列表任务标记为失败
+        if (createdDetailCount == 0) {
+            Long parentTaskId = (Long) page.getRequest().getExtra("taskId");
+            if (parentTaskId != null) {
+                cbgSpiderTaskService.failTask(parentTaskId, "列表页解析失败: 未提取到任何详情任务，可能页面结构变化或无数据");
+                System.err.println("[CbgPetListPageProcessor] 列表页未提取到详情任务，已标记任务失败: taskId=" + parentTaskId + ", url=" + pageUrl);
+            }
+        } else {
+            System.out.println("[CbgPetListPageProcessor] 列表页处理完成，共创建 " + createdDetailCount + " 个详情任务");
         }
     }
 

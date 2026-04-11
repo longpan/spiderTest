@@ -259,4 +259,66 @@ public class CbgSpiderTaskServiceImpl implements CbgSpiderTaskService {
         
         return cbgSpiderTaskDAO.selectPage(new Page<>(page, size), wrapper);
     }
+
+    @Override
+    public int batchDeleteTasks(List<Long> taskIds) {
+        if (taskIds == null || taskIds.isEmpty()) {
+            return 0;
+        }
+        return cbgSpiderTaskDAO.deleteBatchIds(taskIds);
+    }
+
+    @Override
+    public int batchRetryTasks(List<Long> taskIds) {
+        if (taskIds == null || taskIds.isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (Long taskId : taskIds) {
+            CbgSpiderTask task = cbgSpiderTaskDAO.selectById(taskId);
+            if (task != null && ("FAILED".equals(task.getStatus()) || "STOPPED".equals(task.getStatus()))) {
+                task.setStatus("PENDING");
+                task.setRetryCount(task.getRetryCount() + 1);
+                task.setResult(null);
+                task.setUpdateTime(new Date());
+                cbgSpiderTaskDAO.updateById(task);
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public void reRunTask(Long taskId) {
+        CbgSpiderTask task = cbgSpiderTaskDAO.selectById(taskId);
+        if (task != null) {
+            task.setStatus("PENDING");
+            task.setRetryCount(0);
+            task.setResult(null);
+            task.setEndTime(null);
+            task.setUpdateTime(new Date());
+            cbgSpiderTaskDAO.updateById(task);
+        }
+    }
+
+    @Override
+    public int batchReRunTasks(List<Long> taskIds) {
+        if (taskIds == null || taskIds.isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (Long taskId : taskIds) {
+            CbgSpiderTask task = cbgSpiderTaskDAO.selectById(taskId);
+            if (task != null && !"RUNNING".equals(task.getStatus())) {
+                task.setStatus("PENDING");
+                task.setRetryCount(0);
+                task.setResult(null);
+                task.setEndTime(null);
+                task.setUpdateTime(new Date());
+                cbgSpiderTaskDAO.updateById(task);
+                count++;
+            }
+        }
+        return count;
+    }
 }

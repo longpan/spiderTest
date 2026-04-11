@@ -89,14 +89,84 @@
         .sort-link .bi-sort-down {
             color: #1890ff;
         }
+        
+        /* 批量操作栏 */
+        .batch-actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #fff7e6;
+            border-bottom: 1px solid #ffd591;
+            border-radius: 4px 4px 0 0;
+        }
+        .batch-actions-bar .selected-info {
+            font-size: 14px;
+            color: #d48806;
+        }
+        .batch-actions-bar .selected-count {
+            color: #fa8c16;
+            font-weight: 600;
+            margin: 0 4px;
+        }
+        
+        /* 复选框样式 */
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #1890ff;
+        }
+        .select-all-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #1890ff;
+        }
+        
+        /* 调度器控制区 */
+        .scheduler-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .scheduler-status {
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+        .scheduler-status.running {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .scheduler-status.stopped {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
     </style>
 </head>
 <body>
     <div th:fragment="content">
         <!-- 页面标题 -->
-        <div class="page-header">
-            <h4>任务管理</h4>
-            <div class="breadcrumb">首页 / 任务管理</div>
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h4>任务管理</h4>
+                <div class="breadcrumb">首页 / 任务管理</div>
+            </div>
+            <!-- 调度器控制 -->
+            <div class="scheduler-control">
+                <span id="schedulerStatus" class="scheduler-status stopped">
+                    <i class="bi bi-circle-fill me-1"></i>已停止
+                </span>
+                <button type="button" class="ant-btn ant-btn-success ant-btn-sm" onclick="startScheduler()">
+                    <i class="bi bi-play-fill"></i> 启动调度器
+                </button>
+                <button type="button" class="ant-btn ant-btn-danger ant-btn-sm" onclick="stopScheduler()">
+                    <i class="bi bi-stop-fill"></i> 停止调度器
+                </button>
+            </div>
         </div>
 
         <!-- 创建任务卡片 -->
@@ -245,7 +315,18 @@
         <div class="ant-card">
             <div class="card-header">
                 <h5><i class="bi bi-list-task me-2"></i>任务列表</h5>
-                <span class="text-muted" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
+                <div>
+                    <span class="text-muted me-3" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
+                    <button type="button" class="ant-btn ant-btn-primary ant-btn-sm me-2" id="batchReRunBtn" onclick="batchReRunTasks()" style="display: none;" disabled>
+                        <i class="bi bi-play-circle"></i> 重跑选中 (<span id="rerunSelectedCount">0</span>)
+                    </button>
+                    <button type="button" class="ant-btn ant-btn-warning ant-btn-sm me-2" id="batchRetryBtn" onclick="batchRetryTasks()" style="display: none;" disabled>
+                        <i class="bi bi-arrow-clockwise"></i> 重试选中 (<span id="retrySelectedCount">0</span>)
+                    </button>
+                    <button type="button" class="ant-btn ant-btn-danger ant-btn-sm" id="batchDeleteBtn" onclick="batchDeleteTasks()" style="display: none;" disabled>
+                        <i class="bi bi-trash"></i> 删除选中 (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
             </div>
             <div class="card-body p-0">
                 <!-- 表格容器带滚动 -->
@@ -253,6 +334,9 @@
                     <table class="ant-table">
                         <thead>
                             <tr>
+                                <th style="width: 50px;">
+                                    <input type="checkbox" class="select-all-checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)" title="全选">
+                                </th>
                                 <th style="width: 60px;">ID</th>
                                 <th style="width: 90px;">类型</th>
                                 <th style="width: 90px;">状态</th>
@@ -272,6 +356,9 @@
                         </thead>
                         <tbody>
                             <tr th:each="task : ${tasks}">
+                                <td>
+                                    <input type="checkbox" class="task-checkbox" th:value="${task.id}" onclick="updateSelection()">
+                                </td>
                                 <td th:text="${task.id}">1</td>
                                 <td>
                                     <span class="ant-tag" th:classappend="${task.taskType == 'LIST_PAGE'} ? 'ant-tag-default' : 'ant-tag-processing'"
@@ -299,8 +386,12 @@
                                 <td th:text="${#dates.format(task.createTime, 'MM-dd HH:mm')}">01-01 12:00</td>
                                 <td>
                                     <button th:if="${task.status == 'FAILED' or task.status == 'STOPPED'}" 
-                                            class="ant-btn ant-btn-primary ant-btn-sm" th:data-task-id="${task.id}" onclick="retryTask(this.getAttribute('data-task-id'))" title="重试">
-                                        <i class="bi bi-arrow-clockwise"></i>
+                                            class="ant-btn ant-btn-warning ant-btn-sm" th:data-task-id="${task.id}" onclick="retryTask(this.getAttribute('data-task-id'))" title="重试失败任务">
+                                        <i class="bi bi-arrow-clockwise"></i> 重试
+                                    </button>
+                                    <button th:if="${task.status == 'SUCCESS' or task.status == 'PENDING'}" 
+                                            class="ant-btn ant-btn-primary ant-btn-sm" th:data-task-id="${task.id}" onclick="reRunTask(this.getAttribute('data-task-id'))" title="重新运行">
+                                        <i class="bi bi-play-circle"></i> 重跑
                                     </button>
                                     <button th:if="${task.status == 'RUNNING'}" class="ant-btn ant-btn-danger ant-btn-sm"
                                             th:data-task-id="${task.id}" onclick="stopTask(this.getAttribute('data-task-id'))" title="停止">
@@ -463,6 +554,182 @@
                     }
                 })
                 .catch(e => alert('获取详情失败: ' + e.message));
+        }
+        
+        // 调度器控制
+        function startScheduler() {
+            fetch('/admin/api/scheduler/start', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) updateSchedulerStatus(true);
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+
+        function stopScheduler() {
+            if (!confirm('确定要停止调度器吗？')) return;
+            fetch('/admin/api/scheduler/stop', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) updateSchedulerStatus(false);
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+        
+        // 更新调度器状态显示
+        function updateSchedulerStatus(isRunning) {
+            const statusEl = document.getElementById('schedulerStatus');
+            if (isRunning) {
+                statusEl.className = 'scheduler-status running';
+                statusEl.innerHTML = '<i class="bi bi-circle-fill me-1"></i>运行中';
+            } else {
+                statusEl.className = 'scheduler-status stopped';
+                statusEl.innerHTML = '<i class="bi bi-circle-fill me-1"></i>已停止';
+            }
+        }
+        
+        // 全选/取消全选
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            updateSelection();
+        }
+        
+        // 更新选中状态
+        function updateSelection() {
+            const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+            const allCheckboxes = document.querySelectorAll('.task-checkbox');
+            const selectedCount = checkboxes.length;
+            
+            // 更新全选框状态
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allCheckboxes.length > 0 && selectedCount === allCheckboxes.length;
+                selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < allCheckboxes.length;
+            }
+            
+            // 更新批量操作按钮
+            const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+            const batchRetryBtn = document.getElementById('batchRetryBtn');
+            const batchReRunBtn = document.getElementById('batchReRunBtn');
+            const selectedCountSpan = document.getElementById('selectedCount');
+            const retrySelectedCountSpan = document.getElementById('retrySelectedCount');
+            const rerunSelectedCountSpan = document.getElementById('rerunSelectedCount');
+            if (selectedCount > 0) {
+                batchDeleteBtn.style.display = '';
+                batchDeleteBtn.disabled = false;
+                selectedCountSpan.textContent = selectedCount;
+                batchRetryBtn.style.display = '';
+                batchRetryBtn.disabled = false;
+                retrySelectedCountSpan.textContent = selectedCount;
+                batchReRunBtn.style.display = '';
+                batchReRunBtn.disabled = false;
+                rerunSelectedCountSpan.textContent = selectedCount;
+            } else {
+                batchDeleteBtn.style.display = 'none';
+                batchDeleteBtn.disabled = true;
+                batchRetryBtn.style.display = 'none';
+                batchRetryBtn.disabled = true;
+                batchReRunBtn.style.display = 'none';
+                batchReRunBtn.disabled = true;
+            }
+        }
+        
+        // 批量删除任务
+        function batchDeleteTasks() {
+            const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('请先选择要删除的任务');
+                return;
+            }
+            
+            const taskIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (!confirm('确定要删除选中的 ' + taskIds.length + ' 个任务吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            fetch('/admin/api/task/batch-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskIds: taskIds })
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            })
+            .catch(e => alert('删除失败: ' + e.message));
+        }
+
+        // 批量重试任务（仅失败/停止状态）
+        function batchRetryTasks() {
+            const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('请先选择要重试的任务');
+                return;
+            }
+            
+            const taskIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (!confirm('确定要重试选中的 ' + taskIds.length + ' 个任务吗？（仅失败/停止状态的任务会被重试）')) {
+                return;
+            }
+            
+            fetch('/admin/api/task/batch-retry', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskIds: taskIds })
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            })
+            .catch(e => alert('重试失败: ' + e.message));
+        }
+
+        // 重新运行单个任务
+        function reRunTask(taskId) {
+            if (!confirm('确定要重新运行该任务吗？将重置任务状态并重新执行。')) return;
+            fetch('/admin/api/task/' + taskId + '/rerun', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) location.reload();
+                })
+                .catch(e => alert('操作失败: ' + e.message));
+        }
+
+        // 批量重新运行任务
+        function batchReRunTasks() {
+            const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('请先选择要重新运行的任务');
+                return;
+            }
+            
+            const taskIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (!confirm('确定要重新运行选中的 ' + taskIds.length + ' 个任务吗？将重置所有选中任务的状态并重新执行。（已排除运行中任务）')) {
+                return;
+            }
+            
+            fetch('/admin/api/task/batch-rerun', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskIds: taskIds })
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            })
+            .catch(e => alert('操作失败: ' + e.message));
         }
     </script>
 </body>

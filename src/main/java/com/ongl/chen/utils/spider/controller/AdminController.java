@@ -8,6 +8,7 @@ import com.ongl.chen.utils.spider.beans.cbg.CbgSpiderTask;
 import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
 import com.ongl.chen.utils.spider.dao.MhPetItemDAO;
 import com.ongl.chen.utils.spider.service.CbgAuthConfigService;
+import com.ongl.chen.utils.spider.service.CbgSpiderTaskExecutor;
 import com.ongl.chen.utils.spider.service.CbgSpiderTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -32,6 +33,9 @@ public class AdminController {
 
     @Autowired
     private MhPetItemDAO mhPetItemDAO;
+
+    @Autowired
+    private CbgSpiderTaskExecutor cbgSpiderTaskExecutor;
 
     /**
      * 管理首页
@@ -322,9 +326,9 @@ public class AdminController {
     public Map<String, Object> startScheduler() {
         Map<String, Object> result = new HashMap<>();
         try {
-            // 调用调度器启动
+            cbgSpiderTaskExecutor.startScheduler();
             result.put("success", true);
-            result.put("message", "调度器已启动");
+            result.put("message", "调度器已启动（失败阈值: " + cbgSpiderTaskExecutor.getMaxFailures() + "次）");
         } catch (Exception e) {
             result.put("success", false);
             result.put("message", "启动失败: " + e.getMessage());
@@ -340,7 +344,7 @@ public class AdminController {
     public Map<String, Object> stopScheduler() {
         Map<String, Object> result = new HashMap<>();
         try {
-            // 调用调度器停止
+            cbgSpiderTaskExecutor.stopScheduler();
             result.put("success", true);
             result.put("message", "调度器已停止");
         } catch (Exception e) {
@@ -436,6 +440,140 @@ public class AdminController {
         } else {
             result.put("success", false);
             result.put("message", "宠物数据不存在");
+        }
+        return result;
+    }
+
+    /**
+     * 批量删除任务
+     */
+    @PostMapping("/api/task/batch-delete")
+    @ResponseBody
+    public Map<String, Object> batchDeleteTasks(@RequestBody Map<String, List<Long>> requestBody) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<Long> taskIds = requestBody.get("taskIds");
+            if (taskIds == null || taskIds.isEmpty()) {
+                result.put("success", false);
+                result.put("message", "请选择要删除的任务");
+                return result;
+            }
+            
+            // 检查是否有运行中的任务
+            for (Long taskId : taskIds) {
+                CbgSpiderTask task = cbgSpiderTaskService.getTaskById(taskId);
+                if (task != null && "RUNNING".equals(task.getStatus())) {
+                    result.put("success", false);
+                    result.put("message", "无法删除运行中的任务，请先停止: 任务ID=" + taskId);
+                    return result;
+                }
+            }
+            
+            int deletedCount = cbgSpiderTaskService.batchDeleteTasks(taskIds);
+            result.put("success", true);
+            result.put("message", "成功删除 " + deletedCount + " 个任务");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "删除失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 批量重试任务
+     */
+    @PostMapping("/api/task/batch-retry")
+    @ResponseBody
+    public Map<String, Object> batchRetryTasks(@RequestBody Map<String, List<Long>> requestBody) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<Long> taskIds = requestBody.get("taskIds");
+            if (taskIds == null || taskIds.isEmpty()) {
+                result.put("success", false);
+                result.put("message", "请选择要重试的任务");
+                return result;
+            }
+            
+            // 检查是否有运行中的任务
+            for (Long taskId : taskIds) {
+                CbgSpiderTask task = cbgSpiderTaskService.getTaskById(taskId);
+                if (task != null && "RUNNING".equals(task.getStatus())) {
+                    result.put("success", false);
+                    result.put("message", "无法重试运行中的任务，请先停止: 任务ID=" + taskId);
+                    return result;
+                }
+            }
+            
+            int retriedCount = cbgSpiderTaskService.batchRetryTasks(taskIds);
+            result.put("success", true);
+            result.put("message", "成功重试 " + retriedCount + " 个任务（仅失败/停止状态的任务会被重试）");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "重试失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 重新运行任务（成功状态也可）
+     */
+    @PostMapping("/api/task/{taskId}/rerun")
+    @ResponseBody
+    public Map<String, Object> reRunTask(@PathVariable Long taskId) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            CbgSpiderTask task = cbgSpiderTaskService.getTaskById(taskId);
+            if (task == null) {
+                result.put("success", false);
+                result.put("message", "任务不存在");
+                return result;
+            }
+            if ("RUNNING".equals(task.getStatus())) {
+                result.put("success", false);
+                result.put("message", "无法重新运行正在执行中的任务，请先停止");
+                return result;
+            }
+            cbgSpiderTaskService.reRunTask(taskId);
+            result.put("success", true);
+            result.put("message", "任务已重新加入队列执行");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "操作失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 批量重新运行任务
+     */
+    @PostMapping("/api/task/batch-rerun")
+    @ResponseBody
+    public Map<String, Object> batchReRunTasks(@RequestBody Map<String, List<Long>> requestBody) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<Long> taskIds = requestBody.get("taskIds");
+            if (taskIds == null || taskIds.isEmpty()) {
+                result.put("success", false);
+                result.put("message", "请选择要重新运行的任务");
+                return result;
+            }
+            
+            // 检查是否有运行中的任务
+            for (Long taskId : taskIds) {
+                CbgSpiderTask task = cbgSpiderTaskService.getTaskById(taskId);
+                if (task != null && "RUNNING".equals(task.getStatus())) {
+                    result.put("success", false);
+                    result.put("message", "无法重新运行正在执行中的任务，请先停止: 任务ID=" + taskId);
+                    return result;
+                }
+            }
+            
+            int rerunCount = cbgSpiderTaskService.batchReRunTasks(taskIds);
+            result.put("success", true);
+            result.put("message", "成功将 " + rerunCount + " 个任务重新加入队列（已排除运行中任务）");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "操作失败: " + e.getMessage());
         }
         return result;
     }

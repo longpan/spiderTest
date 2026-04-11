@@ -410,6 +410,10 @@
             <span>藏宝阁爬虫管理系统</span>
         </div>
         <div class="nav-right">
+            <a href="javascript:void(0)" onclick="refreshPage()" title="刷新页面">
+                <i class="bi bi-arrow-clockwise"></i>
+                <span>刷新</span>
+            </a>
             <a href="/swagger-ui.html" target="_blank">
                 <i class="bi bi-file-earmark-code"></i>
                 <span>API文档</span>
@@ -445,6 +449,14 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 全局脚本：刷新页面 -->
+    <script>
+        function refreshPage() {
+            location.reload();
+        }
+    </script>
+    
     <div th:replace=":: scripts"></div>
 </body>
 </html>

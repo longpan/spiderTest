@@ -100,4 +100,24 @@ public interface CbgSpiderTaskService {
      * 分页查询任务列表
      */
     IPage<CbgSpiderTask> listTasksPage(Map<String, Object> params);
+
+    /**
+     * 批量删除任务
+     */
+    int batchDeleteTasks(List<Long> taskIds);
+
+    /**
+     * 批量重试任务（仅失败/停止状态）
+     */
+    int batchRetryTasks(List<Long> taskIds);
+
+    /**
+     * 重新运行任务（成功状态的任务也可重新执行）
+     */
+    void reRunTask(Long taskId);
+
+    /**
+     * 批量重新运行任务
+     */
+    int batchReRunTasks(List<Long> taskIds);
 }
