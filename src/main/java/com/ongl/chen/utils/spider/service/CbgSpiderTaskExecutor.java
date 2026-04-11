@@ -363,7 +363,10 @@ public class CbgSpiderTaskExecutor {
         } else {
             System.setProperty("headless", "false");
         }
-        return new CbgMhxySeleniuDownloader(appConfig.getChromeDriverPath(), appConfig);
+        CbgMhxySeleniuDownloader downloader = new CbgMhxySeleniuDownloader(appConfig.getChromeDriverPath(), appConfig);
+        // 防止 Spider.run() 结束后自动调用 close() 关闭 WebDriver 池（多任务复用需要）
+        downloader.setPreventAutoClose(true);
+        return downloader;
     }
 
     /**

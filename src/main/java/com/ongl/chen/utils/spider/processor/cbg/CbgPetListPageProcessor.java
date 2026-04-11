@@ -96,7 +96,12 @@ public class CbgPetListPageProcessor implements PageProcessor {
                 System.err.println("[CbgPetListPageProcessor] 列表页未提取到详情任务，已标记任务失败: taskId=" + parentTaskId + ", url=" + pageUrl);
             }
         } else {
-            System.out.println("[CbgPetListPageProcessor] 列表页处理完成，共创建 " + createdDetailCount + " 个详情任务");
+            // 列表页正常解析完成，标记任务为成功
+            Long parentTaskId = (Long) page.getRequest().getExtra("taskId");
+            if (parentTaskId != null) {
+                cbgSpiderTaskService.completeTask(parentTaskId, "列表页处理完成，共创建 " + createdDetailCount + " 个详情任务");
+                System.out.println("[CbgPetListPageProcessor] 列表页处理完成，共创建 " + createdDetailCount + " 个详情任务，已标记任务成功: taskId=" + parentTaskId);
+            }
         }
     }
 

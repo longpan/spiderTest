@@ -211,7 +211,19 @@ public class CbgMhxySeleniuDownloader implements Downloader, Closeable {
         this.poolSize = thread;
     }
 
+    // 防止 Spider.run() 结束后自动调用 close() 关闭 WebDriver 池（用于多任务复用场景）
+    private volatile boolean preventAutoClose = false;
+
+    /**
+     * 设置是否阻止自动关闭（多任务复用时设为true）
+     */
+    public void setPreventAutoClose(boolean preventAutoClose) {
+        this.preventAutoClose = preventAutoClose;
+    }
+
     public void close() throws IOException {
-        webDriverPool.closeAll();
+        if (!preventAutoClose && webDriverPool != null) {
+            webDriverPool.closeAll();
+        }
     }
 }
