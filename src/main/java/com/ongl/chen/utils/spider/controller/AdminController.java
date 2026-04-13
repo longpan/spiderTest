@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 
 /**
  * 管理页面Controller
@@ -242,6 +245,14 @@ public class AdminController {
         CbgAuthConfig authConfig = cbgAuthConfigService.getGlobalConfig();
         model.addAttribute("authConfig", authConfig);
         return "admin/auth";
+    }
+
+    /**
+     * 日志查看页面
+     */
+    @GetMapping("/logs")
+    public String logs() {
+        return "admin/logs";
     }
 
     // ============ API接口 ============
@@ -576,5 +587,183 @@ public class AdminController {
             result.put("message", "操作失败: " + e.getMessage());
         }
         return result;
+    }
+
+    // ============ 日志管理API ============
+
+    private static final String LOG_DIR = System.getProperty("user.dir") + "/logs";
+    private static final String LOG_FILE_PREFIX = "spider.log";
+
+    /**
+     * 获取日志内容（支持分页和搜索）
+     */
+    @GetMapping("/api/logs")
+    @ResponseBody
+    public Map<String, Object> getLogs(
+            @RequestParam(defaultValue = "100") int lines,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String level,
+            @RequestParam(defaultValue = "") String date) {
+        Map<String, Object> result = new HashMap<>();
+        List<String> logLines = new ArrayList<>();
+        int totalLines = 0;
+        
+        try {
+            Path logPath = resolveLogFilePath(date);
+            System.out.println("[AdminController] 日志路径: " + logPath + ", 存在: " + (logPath != null ? Files.exists(logPath) : "null"));
+            
+            if (logPath != null && Files.exists(logPath)) {
+                // 倒读文件获取最新的日志
+                try (RandomAccessFile raf = new RandomAccessFile(logPath.toFile(), "r")) {
+                    long fileLength = raf.length();
+                    long pos = fileLength - 1;
+                    StringBuilder sb = new StringBuilder();
+                    
+                    while (pos >= 0 && logLines.size() < lines * 3) { // 多读一些用于过滤
+                        raf.seek(pos);
+                        int ch = raf.read();
+                        if (ch == '\n' || ch == '\r') {
+                            if (sb.length() > 0) {
+                                String line = sb.reverse().toString();
+                                totalLines++;
+                                if (matchLine(line, keyword, level)) {
+                                    logLines.add(line);
+                                }
+                                sb = new StringBuilder();
+                            }
+                        } else if (pos == 0) {
+                            sb.append((char) ch);
+                            String line = sb.reverse().toString();
+                            totalLines++;
+                            if (matchLine(line, keyword, level)) {
+                                logLines.add(line);
+                            }
+                        } else {
+                            sb.append((char) ch);
+                        }
+                        pos--;
+                    }
+                }
+                
+                Collections.reverse(logLines);
+                if (logLines.size() > lines) {
+                    logLines = logLines.subList(0, lines);
+                }
+            }
+            
+            result.put("success", true);
+            result.put("data", logLines);
+            result.put("totalLines", totalLines);
+            result.put("logFile", logPath != null ? logPath.getFileName().toString() : null);
+            result.put("lines", logLines.size());
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "读取日志失败: " + e.getMessage());
+            result.put("data", Collections.emptyList());
+        }
+        
+        return result;
+    }
+
+    /**
+     * 获取可用日志日期列表
+     */
+    @GetMapping("/api/logs/dates")
+    @ResponseBody
+    public Map<String, Object> getLogDates() {
+        Map<String, Object> result = new HashMap<>();
+        List<String> dates = new ArrayList<>();
+        
+        try {
+            Path dir = Paths.get(LOG_DIR);
+            if (Files.isDirectory(dir)) {
+                Files.list(dir)
+                    .filter(p -> {
+                        String name = p.getFileName().toString();
+                        return name.startsWith(LOG_FILE_PREFIX) && !name.endsWith(".lck");
+                    })
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(p -> dates.add(extractDateFromFileName(p.getFileName().toString())));
+            } else {
+                System.out.println("[AdminController] 日志目录不存在: " + dir.toAbsolutePath());
+            }
+            
+            result.put("success", true);
+            result.put("dates", dates);
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "获取日志列表失败: " + e.getMessage());
+            result.put("dates", Collections.emptyList());
+        }
+        
+        return result;
+    }
+
+    private Path resolveLogFilePath(String date) {
+        String fileName = (date != null && !date.isEmpty()) ? LOG_FILE_PREFIX + "." + date : LOG_FILE_PREFIX;
+        Path path = Paths.get(LOG_DIR, fileName);
+        if (existsAndNotEmpty(path)) return path;
+
+        // 扫描日志目录，找到最新的匹配文件
+        Path dirPath = Paths.get(LOG_DIR);
+        try {
+            if (Files.isDirectory(dirPath)) {
+                List<Path> logFiles = new ArrayList<>();
+                java.util.stream.Stream<Path> stream = Files.list(dirPath);
+                stream.filter(p -> p.getFileName().toString().startsWith(LOG_FILE_PREFIX))
+                    .filter(p -> !p.getFileName().toString().endsWith(".lck"))
+                    .sorted((a, b) -> { try { return Long.compare(Files.getLastModifiedTime(b).toMillis(), Files.getLastModifiedTime(a).toMillis()); } catch(Exception e) { return 0; } })
+                    .forEach(logFiles::add);
+                stream.close();
+
+                // 日期精确匹配
+                if (date != null && !date.isEmpty()) {
+                    for (Path f : logFiles) {
+                        if (f.getFileName().toString().contains(date) && existsAndNotEmpty(f)) return f;
+                    }
+                }
+                // 返回最新
+                for (Path f : logFiles) {
+                    if (existsAndNotEmpty(f)) return f;
+                }
+            }
+        } catch (Exception e) { /* ignore */ }
+
+        // 兜底：spring.log
+        Path springLog = Paths.get(LOG_DIR, "spring.log");
+        if (existsAndNotEmpty(springLog)) return springLog;
+
+        System.out.println("[AdminController] 未找到日志文件, LOG_DIR=" + LOG_DIR);
+        return null;
+    }
+
+    private boolean existsAndNotEmpty(Path path) {
+        try { return Files.exists(path) && Files.size(path) > 0; } catch (Exception e) { return false; }
+    }
+
+    private String extractDateFromFileName(String fileName) {
+        if (fileName.equals(LOG_FILE_PREFIX)) return "";
+        if (fileName.startsWith(LOG_FILE_PREFIX + ".")) {
+            return fileName.substring((LOG_FILE_PREFIX + ".").length());
+        }
+        return fileName;
+    }
+
+    private boolean matchLine(String line, String keyword, String level) {
+        if (keyword != null && !keyword.isEmpty() && !line.toLowerCase().contains(keyword.toLowerCase())) {
+            return false;
+        }
+        if (level != null && !level.isEmpty()) {
+            // 日志格式：2026-04-13 08:47:28 INFO ... 
+            // level在时间戳后面
+            int timeEnd = line.indexOf(' ', 19); // 跳过日期+空格后的第一个空格
+            if (timeEnd > 0 && timeEnd + 1 < line.length()) {
+                String lineLevel = line.substring(timeEnd + 1).split("\\s+")[0];
+                if (!lineLevel.equalsIgnoreCase(level)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

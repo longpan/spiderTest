@@ -1,0 +1,88 @@
+{
+  "type": "pet",
+  "feature_columns": [
+    "level",
+    "skillNum",
+    "attackQualification",
+    "defenseQualification",
+    "physicalQualification",
+    "manaQualification",
+    "speedQualification",
+    "growUp",
+    "collect",
+    "rareSkillCount",
+    "qualPercent",
+    "skillScore",
+    "growLevelScore",
+    "isBaby"
+  ],
+  "training_date": "2026-04-13 17:33:23",
+  "training_stats": {
+    "train_samples": 4725,
+    "test_samples": 1182,
+    "mae": 499.6796821196718,
+    "mse": 1769186.4211800313,
+    "rmse": 1330.107672776919,
+    "r2": 0.46875179551234636,
+    "median_relative_error": 65.74834615351817,
+    "mean_relative_error": 172.3792272684279
+  },
+  "feature_importance": [
+    {
+      "feature": "skillNum",
+      "importance": 0.2032291264861398
+    },
+    {
+      "feature": "collect",
+      "importance": 0.10141366502695381
+    },
+    {
+      "feature": "speedQualification",
+      "importance": 0.09250476020801766
+    },
+    {
+      "feature": "attackQualification",
+      "importance": 0.09159758240455758
+    },
+    {
+      "feature": "growLevelScore",
+      "importance": 0.08479304173108752
+    },
+    {
+      "feature": "growUp",
+      "importance": 0.07424717117092287
+    },
+    {
+      "feature": "skillScore",
+      "importance": 0.06905815485018837
+    },
+    {
+      "feature": "defenseQualification",
+      "importance": 0.05999765072284955
+    },
+    {
+      "feature": "physicalQualification",
+      "importance": 0.0536376490188717
+    },
+    {
+      "feature": "level",
+      "importance": 0.04897319210033261
+    },
+    {
+      "feature": "qualPercent",
+      "importance": 0.04779839664339341
+    },
+    {
+      "feature": "manaQualification",
+      "importance": 0.041168740212066006
+    },
+    {
+      "feature": "rareSkillCount",
+      "importance": 0.019447803254547553
+    },
+    {
+      "feature": "isBaby",
+      "importance": 0.01213306617007166
+    }
+  ]
+}

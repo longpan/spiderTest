@@ -2,6 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='仪表盘', active='dashboard')}">
 <head>
     <title>仪表盘</title>
+    <style>
+        @media (max-width: 768px) {
+            .card-body > .d-flex { flex-direction: column; gap: 12px; text-align: center; }
+            .ant-card .card-header > a { margin-top: 8px; }
+            .table-responsive-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -12px; padding: 0 12px; }
+            .table-responsive-wrapper .ant-table { min-width: 600px; }
+        }
+    </style>
 </head>
 <body>
     <div th:fragment="content">
@@ -93,6 +101,7 @@
                 <a href="/admin/tasks" class="ant-btn">查看全部</a>
             </div>
             <div class="card-body p-0">
+                <div class="table-responsive-wrapper">
                 <table class="ant-table">
                     <thead>
                         <tr>
@@ -137,6 +146,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

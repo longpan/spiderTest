@@ -1,0 +1,30 @@
+梦幻西游藏宝阁AI估值模型训练报告
+========================================
+生成时间: 2026-04-13 17:33:27
+
+1. 数据源信息
+   数据库: mysql://150.158.130.52:3306/spider
+   数据表: mh_pet_item
+   数据量: 5907 条记录
+
+2. 模型文件
+   宠物模型: train_model/mh_pet_model_real.pkl
+   特征标准化器: train_model/scaler_x_pet.pkl
+   目标标准化器: train_model/scaler_y_pet.pkl
+
+3. 特征信息
+   特征文件: train_model/pet_features_info.json
+   特征数量:        1 个
+
+4. 评估图表
+   图表数量:        2 个
+
+5. 使用说明
+   启动AI服务: python mh_ai_service.py
+   测试模型: python verify_ai_service.py
+   重新训练: 运行本脚本或执行 train_real_models.py
+
+6. 注意事项
+   - 确保数据库连接正常
+   - 定期更新训练数据
+   - 监控模型性能变化

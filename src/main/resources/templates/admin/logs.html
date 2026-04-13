@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='日志管理', active='logs')}">
+<head>
+    <title>日志管理 - 藏宝阁爬虫管理系统</title>
+    <style>
+        @media (max-width: 768px) {
+            .ant-card .card-body[style*="padding: 16px"] { padding: 12px !important; }
+            #logContent { max-height: calc(100vh - 280px); font-size: 12px; }
+        }
+        @media (max-width: 480px) {
+            #logContent { max-height: calc(100vh - 320px); font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+<th:block th:fragment="content">
+
+<div class="page-header">
+    <h4><i class="bi bi-terminal"></i> 日志管理</h4>
+</div>
+
+<!-- 工具栏 -->
+<div class="ant-card">
+    <div class="card-body" style="padding: 16px 24px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:6px;">
+                <label style="font-size:14px;color:#595959;">日期:</label>
+                <select id="logDate" class="ant-input" style="width:auto;padding:4px 8px;font-size:13px;">
+                    <option value="">今天</option>
+                </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <label style="font-size:14px;color:#595959;">级别:</label>
+                <select id="logLevel" class="ant-input" style="width:auto;padding:4px 8px;font-size:13px;">
+                    <option value="">全部</option>
+                    <option value="ERROR">ERROR</option>
+                    <option value="WARN">WARN</option>
+                    <option value="INFO">INFO</option>
+                    <option value="DEBUG">DEBUG</option>
+                </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:200px;">
+                <input type="text" id="keyword" class="ant-input" placeholder="搜索关键字..." style="padding:4px 12px;font-size:13px;"
+                       onkeydown="if(event.key==='Enter')loadLogs()">
+            </div>
+            <button class="ant-btn ant-btn-primary ant-btn-sm" onclick="loadLogs()">
+                <i class="bi bi-search"></i> 搜索
+            </button>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+                <span id="lineInfo" style="font-size:13px;color:#8c8c8c;"></span>
+                <select id="lineCount" class="ant-input" style="width:auto;padding:4px 8px;font-size:13px;" onchange="loadLogs()">
+                    <option value="50">50行</option>
+                    <option value="100" selected>100行</option>
+                    <option value="200">200行</option>
+                    <option value="500">500行</option>
+                    <option value="1000">1000行</option>
+                </select>
+                <button class="ant-btn ant-btn-sm" onclick="toggleAutoRefresh()" id="autoRefreshBtn" title="自动刷新(10秒)">
+                    <i class="bi bi-arrow-repeat"></i> 自动刷新
+                </button>
+                <button class="ant-btn ant-btn-sm" onclick="loadLogs()" title="手动刷新">
+                    <i class="bi bi-arrow-clockwise"></i> 刷新
+                </button>
+                <button class="ant-btn ant-btn-danger ant-btn-sm" onclick="scrollToBottom()" title="滚动到底部">
+                    <i class="bi bi-chevron-double-down"></i> 底部
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 日志内容 -->
+<div class="ant-card" style="margin-bottom:0;">
+    <div class="card-body" style="padding:0;overflow:hidden;">
+        <pre id="logContent" style="margin:0;padding:16px;background:#1e1e1e;color:#d4d4d4;font-family:'Consolas','Monaco','Courier New',monospace;font-size:13px;line-height:1.6;max-height:calc(100vh - 260px);overflow-y:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+    </div>
+</div>
+
+</th:block>
+
+<th:block th:fragment="scripts">
+<script>
+let autoRefreshTimer = null;
+let isAutoRefreshing = false;
+
+// 页面加载时初始化
+$(document).ready(function() {
+    loadLogDates();
+    loadLogs();
+});
+
+// 加载可用日期列表
+function loadLogDates() {
+    $.get('/admin/api/logs/dates', function(res) {
+        if (res.success) {
+            const sel = $('#logDate');
+            sel.empty().append('<option value="">今天</option>');
+            res.dates.forEach(d => {
+                if (d && d !== '') {
+                    sel.append('<option value="' + d + '">' + d + '</option>');
+                }
+            });
+        }
+    });
+}
+
+// 加载日志
+function loadLogs() {
+    const lines = $('#lineCount').val();
+    const keyword = $('#keyword').val();
+    const level = $('#logLevel').val();
+    const date = $('#logDate').val();
+
+    $('#logContent').html('<span style="color:#888;">正在加载日志...</span>');
+
+    $.ajax({
+        url: '/admin/api/logs',
+        data: { lines, keyword, level, date },
+        success: function(res) {
+            if (res.success) {
+                renderLogs(res.data);
+                $('#lineInfo').text('共 ' + (res.totalLines || 0) + ' 行，显示 ' + res.lines + ' 行' + (res.logFile ? ' | 文件: ' + res.logFile : ''));
+            } else {
+                $('#logContent').html('<span style="color:#ff4d4f;">加载失败: ' + (res.message || '未知错误') + '</span>');
+                $('#lineInfo').text('');
+            }
+        },
+        error: function() {
+            $('#logContent').html('<span style="color:#ff4d4f;">请求失败，请检查服务是否正常</span>');
+            $('#lineInfo').text('');
+        }
+    });
+}
+
+// 渲染日志（带颜色高亮）
+function renderLogs(lines) {
+    if (!lines || lines.length === 0) {
+        $('#logContent').html('<span style="color:#888;">暂无日志数据</span>');
+        return;
+    }
+
+    let html = '';
+    lines.forEach(line => {
+        // 转义HTML特殊字符
+        let escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        
+        // 根据级别着色
+        if (/ ERROR /.test(line)) {
+            escaped = escaped.replace(/( ERROR )/, '<span style="color:#ff4d4f;background:#3a1517;padding:0 2px;border-radius:2px;">$1</span>');
+        } else if (/ WARN/.test(line)) {
+            escaped = escaped.replace(/(WARN)/, '<span style="color:#faad14;background:#3b3015;padding:0 2px;border-radius:2px">$1</span>');
+        } else if (/ INFO / .test(line)) {
+            escaped = escaped.replace(/( INFO )/, '<span style="color:#52c41a">$1</span>');
+        }
+        
+        // 高亮时间戳
+        escaped = escaped.replace(/^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/, '<span style="color:#569cd6">$1</span>');
+        
+        // 高亮搜索关键词
+        const kw = $('#keyword').val();
+        if (kw) {
+            try {
+                const regex = new RegExp('(' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                escaped = escaped.replace(regex, '<span style="background:#faad14;color:#000;padding:0 2px;border-radius:2px;font-weight:bold;">$1</span>');
+            } catch(e) {}
+        }
+        
+        html += escaped + '\n';
+    });
+
+    $('#logContent').html(html);
+    
+    // 如果是自动刷新模式，保持滚动到底部
+    if (isAutoRefreshing) {
+        scrollToBottom();
+    }
+}
+
+// 切换自动刷新
+function toggleAutoRefresh() {
+    isAutoRefreshing = !isAutoRefreshing;
+    const btn = $('#autoRefreshBtn');
+    
+    if (isAutoRefreshing) {
+        btn.addClass('ant-btn-success');
+        btn.html('<i class="bi bi-pause-circle"></i> 停止刷新');
+        autoRefreshTimer = setInterval(loadLogs, 10000);
+    } else {
+        btn.removeClass('ant-btn-success');
+        btn.html('<i class="bi bi-arrow-repeat"></i> 自动刷新');
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+    }
+}
+
+// 滚动到底部
+function scrollToBottom() {
+    const el = document.getElementById('logContent');
+    el.scrollTop = el.scrollHeight;
+}
+</script>
+<style>
+#logContent::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+#logContent::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+}
+#logContent::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+#logContent::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+.ant-input option {
+    padding: 4px 8px;
+}
+</style>
+</th:block>
+</body>
+</html>

@@ -57,3 +57,13 @@ spider:
     max-concurrent: 1
     # 任务轮询间隔（毫秒）
     poll-interval: 5000
+
+# 日志配置
+logging:
+  file:
+    name: ${user.dir}/logs/spider.log
+  level:
+    root: INFO
+    org.apache.http: ERROR
+    com.jayway.jsonpath: ERROR
+    org.springframework.web: WARN

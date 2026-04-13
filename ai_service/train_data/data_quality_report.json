@@ -1,0 +1,212 @@
+{
+  "summary": {
+    "total_records": 5907,
+    "date_extracted": "2026-04-13 17:33:17",
+    "fields_count": 20
+  },
+  "field_statistics": {
+    "level": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 160,
+      "min": 0.0,
+      "max": 180.0,
+      "mean": 71.45285254782462,
+      "median": 37.0
+    },
+    "skillNum": {
+      "dtype": "int64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 16,
+      "min": 0.0,
+      "max": 15.0,
+      "mean": 5.59641103775182,
+      "median": 6.0
+    },
+    "attackQualification": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 900,
+      "min": 0.0,
+      "max": 1656.0,
+      "mean": 1211.7008633824275,
+      "median": 1263.0
+    },
+    "defenseQualification": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 857,
+      "min": 0.0,
+      "max": 1600.0,
+      "mean": 1106.8500084645336,
+      "median": 1139.0
+    },
+    "physicalQualification": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 2300,
+      "min": 0.0,
+      "max": 6426.0,
+      "mean": 3688.3660064330456,
+      "median": 3730.0
+    },
+    "manaQualification": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 1676,
+      "min": 0.0,
+      "max": 3500.0,
+      "mean": 1964.4447265955646,
+      "median": 1972.0
+    },
+    "speedQualification": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 810,
+      "min": 0.0,
+      "max": 1684.0,
+      "mean": 1138.0196377179618,
+      "median": 1188.0
+    },
+    "growUp": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 235,
+      "min": 0.0,
+      "max": 1.3,
+      "mean": 1.1965710174369393,
+      "median": 1.231
+    },
+    "collect": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 62,
+      "min": 0.0,
+      "max": 109.0,
+      "mean": 2.8518706619265277,
+      "median": 0.0
+    },
+    "price": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 1904,
+      "min": 10.0,
+      "max": 50138.5,
+      "mean": 912.0145099035043,
+      "median": 300.0
+    },
+    "rareSkillCount": {
+      "dtype": "int64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 5,
+      "min": 0.0,
+      "max": 4.0,
+      "mean": 0.8488234298290164,
+      "median": 1.0
+    },
+    "qualPercent": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 5769,
+      "min": 0.0,
+      "max": 1.0618658161761612,
+      "mean": 0.7530706439479917,
+      "median": 0.7665923303229337
+    },
+    "skillScore": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 532,
+      "min": 0.0,
+      "max": 50.0,
+      "mean": 12.860843162606205,
+      "median": 13.0
+    },
+    "growLevelScore": {
+      "dtype": "float64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 2087,
+      "min": 0.0,
+      "max": 2340.0,
+      "mean": 864.0777755205688,
+      "median": 375.6
+    },
+    "isBaby": {
+      "dtype": "int64",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 2,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.8406974775689859,
+      "median": 1.0
+    },
+    "original_skillList": {
+      "dtype": "object",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 4620
+    },
+    "original_isBaby": {
+      "dtype": "object",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 3
+    },
+    "name": {
+      "dtype": "object",
+      "non_null_count": 5906,
+      "null_count": 1,
+      "null_percentage": 0.016929067208396816,
+      "unique_values": 92
+    },
+    "code": {
+      "dtype": "object",
+      "non_null_count": 5906,
+      "null_count": 1,
+      "null_percentage": 0.016929067208396816,
+      "unique_values": 5906
+    },
+    "createTime": {
+      "dtype": "object",
+      "non_null_count": 5907,
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 8
+    }
+  },
+  "quality_issues": [
+    "价格存在异常值: 640 个 (占比: 10.8%)"
+  ]
+}

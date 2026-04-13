@@ -59,6 +59,17 @@
             color: #262626;
             font-weight: 600;
         }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .table-scroll-container { max-height: none; overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; }
+            .pagination-wrapper { flex-direction: column; gap: 10px; padding: 12px !important; text-align: center; }
+            form.row [class*="col-md"] { width: 50% !important; flex: 0 0 50% !important; max-width: 50% !important; }
+        }
+
+        @media (max-width: 480px) {
+            form.row [class*="col-md"] { width: 100% !important; flex: 0 0 100% !important; max-width: 100% !important; }
+        }
     </style>
 </head>
 <body>
