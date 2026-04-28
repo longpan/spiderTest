@@ -3,6 +3,7 @@ package com.ongl.chen.utils.spider.service.impl;
 import com.ongl.chen.utils.spider.beans.dbg.MhEquipItem;
 import com.ongl.chen.utils.spider.beans.dbg.MhLingShiItem;
 import com.ongl.chen.utils.spider.beans.dbg.MhPetItem;
+import com.ongl.chen.utils.spider.dao.MhPetItemDAO;
 import com.ongl.chen.utils.spider.service.MhValuationService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class MhValuationServiceImpl implements MhValuationService {
 
     @Autowired(required = false)
     private RestTemplate restTemplate;
+
+    @Autowired
+    private MhPetItemDAO mhPetItemDAO;
 
     private static final String AI_SERVICE_URL = "http://localhost:8000/predict";
 
@@ -103,6 +107,12 @@ public class MhValuationServiceImpl implements MhValuationService {
             this.source = source;
         }
 
+        CachedValuation(double estimatedPrice, String source, long timestamp) {
+            this.estimatedPrice = estimatedPrice;
+            this.timestamp = timestamp;
+            this.source = source;
+        }
+
         boolean isExpired() {
             return System.currentTimeMillis() - timestamp > CACHE_TTL_MS;
         }
@@ -150,6 +160,11 @@ public class MhValuationServiceImpl implements MhValuationService {
             double score = (price > 0) ? (estimatedValue / price) : 0.0;
             item.setValuationScore(Math.round(score * 100.0) / 100.0);
             updateLabel(item, score);
+            
+            // 将估值结果保存回数据库
+            if (item.getId() != null) {
+                mhPetItemDAO.updateById(item);
+            }
         } catch (Exception e) {
             System.err.println("Pet valuation failed: " + e.getMessage());
         }
@@ -281,9 +296,9 @@ public class MhValuationServiceImpl implements MhValuationService {
         if (valuationCache.size() >= MAX_CACHE_SIZE) {
             cleanExpiredCache();
         }
-        CachedValuation cv = new CachedValuation(price, source);
-        // 通过修改timestamp使isExpired()在ttlMs后返回true
-        cv.timestamp = System.currentTimeMillis() + CACHE_TTL_MS - ttlMs;
+        // 计算自定义时间戳，使isExpired()在ttlMs后返回true
+        long customTimestamp = System.currentTimeMillis() + CACHE_TTL_MS - ttlMs;
+        CachedValuation cv = new CachedValuation(price, source, customTimestamp);
         valuationCache.put(key, cv);
     }
 

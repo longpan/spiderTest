@@ -1,8 +1,8 @@
 {
   "description": "梦幻西游藏宝阁宠物真实训练数据",
   "source": "mh_pet_item 数据库表",
-  "extraction_time": "2026-04-13 17:33:17",
-  "record_count": 5907,
+  "extraction_time": "2026-04-28 16:29:06",
+  "record_count": 8986,
   "fields": {
     "level": "等级",
     "skillNum": "技能数量",

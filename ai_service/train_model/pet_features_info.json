@@ -16,73 +16,73 @@
     "growLevelScore",
     "isBaby"
   ],
-  "training_date": "2026-04-13 17:33:23",
+  "training_date": "2026-04-28 16:29:56",
   "training_stats": {
-    "train_samples": 4725,
-    "test_samples": 1182,
-    "mae": 499.6796821196718,
-    "mse": 1769186.4211800313,
-    "rmse": 1330.107672776919,
-    "r2": 0.46875179551234636,
-    "median_relative_error": 65.74834615351817,
-    "mean_relative_error": 172.3792272684279
+    "train_samples": 7188,
+    "test_samples": 1798,
+    "mae": 544.5724294057661,
+    "mse": 7568565.211485574,
+    "rmse": 2751.1025447055904,
+    "r2": 0.33388493708024314,
+    "median_relative_error": 57.07103433066641,
+    "mean_relative_error": 166.9938887284636
   },
   "feature_importance": [
     {
       "feature": "skillNum",
-      "importance": 0.2032291264861398
-    },
-    {
-      "feature": "collect",
-      "importance": 0.10141366502695381
-    },
-    {
-      "feature": "speedQualification",
-      "importance": 0.09250476020801766
-    },
-    {
-      "feature": "attackQualification",
-      "importance": 0.09159758240455758
+      "importance": 0.23657916563130277
     },
     {
       "feature": "growLevelScore",
-      "importance": 0.08479304173108752
+      "importance": 0.10418355554175678
+    },
+    {
+      "feature": "attackQualification",
+      "importance": 0.09993299973192568
     },
     {
       "feature": "growUp",
-      "importance": 0.07424717117092287
+      "importance": 0.08820602289054547
     },
     {
-      "feature": "skillScore",
-      "importance": 0.06905815485018837
+      "feature": "collect",
+      "importance": 0.0663274194323889
+    },
+    {
+      "feature": "speedQualification",
+      "importance": 0.0633854117438729
     },
     {
       "feature": "defenseQualification",
-      "importance": 0.05999765072284955
+      "importance": 0.06094473349734862
     },
     {
-      "feature": "physicalQualification",
-      "importance": 0.0536376490188717
+      "feature": "skillScore",
+      "importance": 0.05852532938718143
     },
     {
       "feature": "level",
-      "importance": 0.04897319210033261
+      "importance": 0.05558134295088745
     },
     {
-      "feature": "qualPercent",
-      "importance": 0.04779839664339341
+      "feature": "physicalQualification",
+      "importance": 0.050413994129043675
     },
     {
       "feature": "manaQualification",
-      "importance": 0.041168740212066006
+      "importance": 0.043747411823483816
+    },
+    {
+      "feature": "qualPercent",
+      "importance": 0.04330140519273771
     },
     {
       "feature": "rareSkillCount",
-      "importance": 0.019447803254547553
+      "importance": 0.01666396031861631
     },
     {
       "feature": "isBaby",
-      "importance": 0.01213306617007166
+      "importance": 0.012207247728908554
     }
   ]
 }
