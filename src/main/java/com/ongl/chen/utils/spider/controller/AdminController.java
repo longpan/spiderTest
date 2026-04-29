@@ -1,5 +1,6 @@
 package com.ongl.chen.utils.spider.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -15,6 +16,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.io.*;
@@ -453,6 +457,53 @@ public class AdminController {
             result.put("message", "宠物数据不存在");
         }
         return result;
+    }
+
+    /**
+     * 导出选中的宠物数据
+     */
+    @PostMapping("/api/pets/export-selected")
+    public void exportSelectedPets(@RequestBody Map<String, List<Long>> requestBody, HttpServletResponse response) throws IOException {
+        List<Long> ids = requestBody.get("ids");
+        if (ids == null || ids.isEmpty()) {
+            response.setStatus(400);
+            response.getWriter().write("请选择要导出的数据");
+            return;
+        }
+        
+        // 查询数据
+        List<MhPetItem> pets = mhPetItemDAO.selectBatchIds(ids);
+        
+        // 设置响应头
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String fileName = URLEncoder.encode("宠物数据_选中_" + System.currentTimeMillis(), "UTF-8").replaceAll("\\+", "%20");
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+        
+        // 导出Excel
+        EasyExcel.write(response.getOutputStream(), MhPetItem.class)
+                .sheet("宠物数据")
+                .doWrite(pets);
+    }
+
+    /**
+     * 导出所有宠物数据
+     */
+    @GetMapping("/api/pets/export-all")
+    public void exportAllPets(HttpServletResponse response) throws IOException {
+        // 查询所有数据
+        List<MhPetItem> pets = mhPetItemDAO.selectList(null);
+        
+        // 设置响应头
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String fileName = URLEncoder.encode("宠物数据_全部_" + System.currentTimeMillis(), "UTF-8").replaceAll("\\+", "%20");
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+        
+        // 导出Excel
+        EasyExcel.write(response.getOutputStream(), MhPetItem.class)
+                .sheet("宠物数据")
+                .doWrite(pets);
     }
 
     /**

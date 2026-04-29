@@ -137,7 +137,15 @@
         <div class="ant-card">
             <div class="card-header">
                 <h5><i class="bi bi-collection me-2"></i>宠物列表</h5>
-                <span class="text-muted" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
+                <div>
+                    <span class="text-muted me-3" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
+                    <button class="ant-btn ant-btn-success ant-btn-sm" onclick="exportSelected()">
+                        <i class="bi bi-download"></i> 导出选中
+                    </button>
+                    <button class="ant-btn ant-btn-primary ant-btn-sm ms-2" onclick="exportAll()">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> 导出全部
+                    </button>
+                </div>
             </div>
             <div class="card-body p-0">
                 <!-- 表格容器带滚动 -->
@@ -145,6 +153,9 @@
                     <table class="ant-table">
                         <thead>
                             <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                </th>
                                 <th style="width: 60px;">ID</th>
                                 <th style="width: 140px;">编号</th>
                                 <th>名称</th>
@@ -185,6 +196,9 @@
                         </thead>
                         <tbody>
                             <tr th:each="pet : ${pets}">
+                                <td>
+                                    <input type="checkbox" class="pet-checkbox" th:value="${pet.id}" th:data-code="${pet.code}">
+                                </td>
                                 <td th:text="${pet.id}">1</td>
                                 <td th:text="${pet.code}" style="font-family: monospace; font-size: 12px;">-</td>
                                 <td>
@@ -371,6 +385,66 @@
     </style>
 
     <script th:fragment="scripts">
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.pet-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        }
+
+        // 导出选中的数据
+        function exportSelected() {
+            const checkboxes = document.querySelectorAll('.pet-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('请至少选择一条数据');
+                return;
+            }
+            
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+            const loading = alert('正在导出 ' + ids.length + ' 条数据...');
+            
+            // 使用POST请求导出
+            fetch('/admin/api/pets/export-selected', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('导出失败');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '宠物数据_选中_' + new Date().getTime() + '.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                alert('导出成功');
+            })
+            .catch(error => {
+                alert('导出失败: ' + error.message);
+            });
+        }
+
+        // 导出所有数据
+        function exportAll() {
+            if (!confirm('确定要导出所有 ' + document.querySelector('.text-muted').textContent + ' 数据吗？这可能需要一些时间。')) {
+                return;
+            }
+            
+            alert('正在导出所有数据，请稍候...');
+            
+            // 直接下载
+            window.location.href = '/admin/api/pets/export-all';
+        }
+
         function showDetail(petId) {
             fetch('/admin/api/pet/' + petId)
                 .then(r => r.json())
