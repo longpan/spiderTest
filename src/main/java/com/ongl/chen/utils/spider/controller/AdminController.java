@@ -236,7 +236,8 @@ public class AdminController {
      */
     private String validateSortField(String sortField) {
         Set<String> validFields = new HashSet<>(Arrays.asList(
-                "price", "collect", "skillNum", "updateTime", "id", "name", "level", "code"
+                "price", "collect", "skillNum", "updateTime", "id", "name", "level", "code",
+                "valuationValue", "valuationScore"
         ));
         return validFields.contains(sortField) ? sortField : "updateTime";
     }
@@ -641,6 +642,83 @@ public class AdminController {
     }
 
     // ============ 日志管理API ============
+
+    /**
+     * 重新抓取选中的宠物
+     */
+    @PostMapping("/api/pets/rerun-selected")
+    @ResponseBody
+    public Map<String, Object> rerunSelectedPets(@RequestBody Map<String, List<Long>> requestBody) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<Long> ids = requestBody.get("ids");
+            if (ids == null || ids.isEmpty()) {
+                result.put("success", false);
+                result.put("message", "请至少选择一条数据");
+                return result;
+            }
+            
+            // 获取选中的宠物
+            List<MhPetItem> pets = mhPetItemDAO.selectBatchIds(ids);
+            int successCount = 0;
+            int failCount = 0;
+            
+            for (MhPetItem pet : pets) {
+                if (pet.getDetailUrl() != null && !pet.getDetailUrl().trim().isEmpty()) {
+                    boolean rerunSuccess = cbgSpiderTaskService.reRunTaskByUrl(pet.getDetailUrl());
+                    if (rerunSuccess) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } else {
+                    failCount++;
+                }
+            }
+            
+            result.put("success", true);
+            result.put("message", "成功创建/重置 " + successCount + " 个任务，失败 " + failCount + " 个");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "操作失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 重新抓取所有宠物
+     */
+    @PostMapping("/api/pets/rerun-all")
+    @ResponseBody
+    public Map<String, Object> rerunAllPets() {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            // 获取所有宠物
+            List<MhPetItem> pets = mhPetItemDAO.selectList(null);
+            int successCount = 0;
+            int failCount = 0;
+            
+            for (MhPetItem pet : pets) {
+                if (pet.getDetailUrl() != null && !pet.getDetailUrl().trim().isEmpty()) {
+                    boolean rerunSuccess = cbgSpiderTaskService.reRunTaskByUrl(pet.getDetailUrl());
+                    if (rerunSuccess) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } else {
+                    failCount++;
+                }
+            }
+            
+            result.put("success", true);
+            result.put("message", "成功创建/重置 " + successCount + " 个任务，失败 " + failCount + " 个");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "操作失败: " + e.getMessage());
+        }
+        return result;
+    }
 
     private static final String LOG_DIR = System.getProperty("user.dir") + "/logs";
     private static final String LOG_FILE_PREFIX = "spider.log";

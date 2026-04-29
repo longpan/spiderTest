@@ -38,6 +38,12 @@ public interface CbgSpiderTaskDAO extends BaseMapper<CbgSpiderTask> {
     CbgSpiderTask getTaskByItemCode(@Param("itemCode") String itemCode);
 
     /**
+     * 根据URL查询任务
+     */
+    @Select("SELECT * FROM cbg_spider_task WHERE url = #{url} ORDER BY createTime DESC LIMIT 1")
+    CbgSpiderTask getTaskByUrl(@Param("url") String url);
+
+    /**
      * 更新任务状态为运行中
      */
     @Update("UPDATE cbg_spider_task SET status = 'RUNNING', startTime = NOW(), updateTime = NOW() WHERE id = #{taskId}")
