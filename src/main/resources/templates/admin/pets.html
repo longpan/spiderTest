@@ -7,12 +7,13 @@
         .table-scroll-container {
             max-height: calc(100vh - 380px);
             overflow-y: auto;
-            overflow-x: hidden;
+            overflow-x: auto;
         }
         
         /* 自定义滚动条 */
         .table-scroll-container::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
         .table-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
@@ -28,6 +29,7 @@
         
         /* 固定表头 */
         .table-scroll-container .ant-table {
+            min-width: 1350px;
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
@@ -40,6 +42,11 @@
         .table-scroll-container .ant-table thead th {
             background: #fafafa;
             border-bottom: 2px solid #f0f0f0;
+            white-space: nowrap;
+        }
+        .table-scroll-container .ant-table tbody td {
+            white-space: nowrap;
+            vertical-align: middle;
         }
         
         /* 分页包装器 */
@@ -261,16 +268,18 @@
                                     <span class="text-truncate d-inline-block" style="max-width: 90px; font-size: 12px;" th:text="${pet.lightSpot2} ?: '-'" title="${pet.lightSpot2}">-</span>
                                 </td>
                                 <td style="text-align: center; white-space: nowrap;" th:text="${#dates.format(pet.updateTime, 'MM-dd HH:mm')}">01-01 12:00</td>
-                                <td style="text-align: center; white-space: nowrap;">
-                                    <button class="ant-btn ant-btn-primary ant-btn-sm" th:data-pet-id="${pet.id}" onclick="showDetail(this.getAttribute('data-pet-id'))" title="详情">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="ant-btn ant-btn-sm ms-1" th:data-item-code="${pet.code}" onclick="createReplayTask(this.getAttribute('data-item-code'))" title="重新爬取">
-                                        <i class="bi bi-arrow-clockwise"></i>
-                                    </button>
-                                    <a th:href="${pet.detailUrl}" target="_blank" class="ant-btn ant-btn-sm ms-1" title="查看原页">
-                                        <i class="bi bi-box-arrow-up-right"></i>
-                                    </a>
+                                <td style="text-align: center; white-space: nowrap; padding: 4px 2px;">
+                                    <div style="display: inline-flex; gap: 2px; align-items: center;">
+                                        <button class="ant-btn ant-btn-primary ant-btn-sm" th:data-pet-id="${pet.id}" onclick="showDetail(this.getAttribute('data-pet-id'))" title="详情" style="padding: 2px 6px;">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="ant-btn ant-btn-sm" th:data-item-code="${pet.code}" onclick="createReplayTask(this.getAttribute('data-item-code'))" title="重新爬取" style="padding: 2px 6px;">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                        <a th:href="${pet.detailUrl}" target="_blank" class="ant-btn ant-btn-sm" title="查看原页" style="padding: 2px 6px;">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
