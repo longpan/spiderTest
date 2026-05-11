@@ -1,0 +1,44 @@
+FROM python:3.10-bullseye
+
+ARG PIP_INDEX_URL=
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    DISPLAY=:99 \
+    VNC_PORT=5901 \
+    AI_PORT=8000 \
+    SPIDER_PORT=8081 \
+    CHROME_PROFILE_DIR=/home/ubuntu/selenium/chrome-profile \
+    SELENIUM_CONFIG=/data/webmagic/webmagic-selenium/config.ini
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    openjdk-11-jre-headless \
+    xvfb x11vnc fluxbox xterm \
+    supervisor \
+    chromium chromium-driver \
+    ca-certificates curl \
+    procps net-tools iproute2 \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN id -u ubuntu >/dev/null 2>&1 || useradd -m -u 1000 -s /bin/bash ubuntu \
+  && mkdir -p /home/ubuntu/java_app /home/ubuntu/selenium /data/webmagic/webmagic-selenium /var/log/supervisor \
+  && chown -R ubuntu:ubuntu /home/ubuntu /data/webmagic /var/log/supervisor
+
+COPY spider.jar /home/ubuntu/java_app/spider.jar
+COPY ai_service /home/ubuntu/ai_service
+COPY scripts /home/ubuntu/scripts
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/entrypoint.sh /entrypoint.sh
+
+RUN python -m venv /opt/venv \
+  && EXTRA_INDEX="" \
+  && if [ -n "${PIP_INDEX_URL}" ]; then EXTRA_INDEX="--index-url ${PIP_INDEX_URL}"; fi \
+  && /opt/venv/bin/pip install --no-cache-dir --retries 10 --timeout 180 ${EXTRA_INDEX} -r /home/ubuntu/ai_service/requirements.txt \
+  && chmod +x /entrypoint.sh \
+  && chmod +x /home/ubuntu/scripts/*.sh
+
+USER ubuntu
+WORKDIR /home/ubuntu
+
+EXPOSE 8081 8000 5901
+ENTRYPOINT ["/entrypoint.sh"]

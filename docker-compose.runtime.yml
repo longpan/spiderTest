@@ -1,0 +1,30 @@
+services:
+  spider-suite:
+    build:
+      context: .
+      dockerfile: Dockerfile.runtime
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL-}
+    environment:
+      VNC_PASS: ${VNC_PASS} 
+      VNC_PORT: 5901
+      AI_PORT: 8000
+      SPIDER_PORT: 8081
+      CHROME_PROFILE_DIR: /home/ubuntu/selenium/chrome-profile
+      SELENUIM_CONFIG: /home/ubuntu/selenium/config.ini
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-qwer@1234}
+    ports:
+      - "${HOST_SPIDER_PORT:-8081}:8081"
+      - "${HOST_AI_PORT:-8000}:8000"
+      - "${HOST_VNC_PORT:-5901}:5901"
+    volumes:
+      - spider_chrome_profile:/home/ubuntu/selenium/chrome-profile
+      - spider_logs:/var/log/supervisor
+      - /home/ubuntu/selenium/vnc:/home/ubuntu/selenium/vnc
+    restart: unless-stopped
+
+volumes:
+  spider_chrome_profile:
+  spider_logs:
