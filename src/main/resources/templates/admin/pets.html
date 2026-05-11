@@ -7,12 +7,13 @@
         .table-scroll-container {
             max-height: calc(100vh - 380px);
             overflow-y: auto;
-            overflow-x: hidden;
+            overflow-x: auto;
         }
         
         /* 自定义滚动条 */
         .table-scroll-container::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
         .table-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
@@ -28,6 +29,7 @@
         
         /* 固定表头 */
         .table-scroll-container .ant-table {
+            min-width: 1350px;
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
@@ -40,6 +42,11 @@
         .table-scroll-container .ant-table thead th {
             background: #fafafa;
             border-bottom: 2px solid #f0f0f0;
+            white-space: nowrap;
+        }
+        .table-scroll-container .ant-table tbody td {
+            white-space: nowrap;
+            vertical-align: middle;
         }
         
         /* 分页包装器 */
@@ -58,6 +65,17 @@
         .pagination-info strong {
             color: #262626;
             font-weight: 600;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .table-scroll-container { max-height: none; overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; }
+            .pagination-wrapper { flex-direction: column; gap: 10px; padding: 12px !important; text-align: center; }
+            form.row [class*="col-md"] { width: 50% !important; flex: 0 0 50% !important; max-width: 50% !important; }
+        }
+
+        @media (max-width: 480px) {
+            form.row [class*="col-md"] { width: 100% !important; flex: 0 0 100% !important; max-width: 100% !important; }
         }
     </style>
 </head>
@@ -101,6 +119,8 @@
                         <select name="sortField" class="ant-input">
                             <option value="updateTime" th:selected="${sortField == 'updateTime'}">更新时间</option>
                             <option value="price" th:selected="${sortField == 'price'}">价格</option>
+                            <option value="valuationValue" th:selected="${sortField == 'valuationValue'}">预估价格</option>
+                            <option value="valuationScore" th:selected="${sortField == 'valuationScore'}">性价比</option>
                             <option value="collect" th:selected="${sortField == 'collect'}">收藏数</option>
                             <option value="skillNum" th:selected="${sortField == 'skillNum'}">技能数</option>
                         </select>
@@ -126,7 +146,21 @@
         <div class="ant-card">
             <div class="card-header">
                 <h5><i class="bi bi-collection me-2"></i>宠物列表</h5>
-                <span class="text-muted" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
+                <div>
+                    <span class="text-muted me-3" th:text="'共 ' + ${total} + ' 条'">共 0 条</span>
+                    <button class="ant-btn ant-btn-success ant-btn-sm" onclick="exportSelected()">
+                        <i class="bi bi-download"></i> 导出选中
+                    </button>
+                    <button class="ant-btn ant-btn-primary ant-btn-sm ms-2" onclick="exportAll()">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> 导出全部
+                    </button>
+                    <button class="ant-btn ant-btn-warning ant-btn-sm ms-2" onclick="rerunSelected()">
+                        <i class="bi bi-arrow-clockwise"></i> 重新抓取选中
+                    </button>
+                    <button class="ant-btn ant-btn-danger ant-btn-sm ms-2" onclick="rerunAll()">
+                        <i class="bi bi-arrow-repeat"></i> 重新抓取全部
+                    </button>
+                </div>
             </div>
             <div class="card-body p-0">
                 <!-- 表格容器带滚动 -->
@@ -134,84 +168,118 @@
                     <table class="ant-table">
                         <thead>
                             <tr>
-                                <th style="width: 60px;">ID</th>
-                                <th style="width: 140px;">编号</th>
-                                <th>名称</th>
-                                <th style="width: 80px;">等级</th>
-                                <th>服务器</th>
-                                <th style="width: 100px;" class="sortable-header">
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                </th>
+                                <th style="width: 50px;">ID</th>
+                                <th style="width: 120px;">编号</th>
+                                <th style="width: 100px;">名称</th>
+                                <th style="width: 60px;">等级</th>
+                                <th style="width: 120px;">服务器</th>
+                                <th style="width: 80px;" class="sortable-header">
                                     <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='price', sortOrder=${sortField == 'price' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
                                         价格
                                         <i th:if="${sortField == 'price'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
                                         <i th:unless="${sortField == 'price'}" class="bi bi-filter"></i>
                                     </a>
                                 </th>
+                                <th style="width: 80px;" class="sortable-header">
+                                    <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='valuationValue', sortOrder=${sortField == 'valuationValue' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
+                                        预估价格
+                                        <i th:if="${sortField == 'valuationValue'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
+                                        <i th:unless="${sortField == 'valuationValue'}" class="bi bi-filter"></i>
+                                    </a>
+                                </th>
                                 <th style="width: 70px;" class="sortable-header">
+                                    <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='valuationScore', sortOrder=${sortField == 'valuationScore' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
+                                        性价比
+                                        <i th:if="${sortField == 'valuationScore'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
+                                        <i th:unless="${sortField == 'valuationScore'}" class="bi bi-filter"></i>
+                                    </a>
+                                </th>
+                                <th style="width: 120px;">评价</th>
+                                <th style="width: 60px;" class="sortable-header">
                                     <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='collect', sortOrder=${sortField == 'collect' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
                                         收藏
                                         <i th:if="${sortField == 'collect'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
                                         <i th:unless="${sortField == 'collect'}" class="bi bi-filter"></i>
                                     </a>
                                 </th>
-                                <th style="width: 80px;" class="sortable-header">
+                                <th style="width: 60px;" class="sortable-header">
                                     <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='skillNum', sortOrder=${sortField == 'skillNum' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
                                         技能数
                                         <i th:if="${sortField == 'skillNum'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
                                         <i th:unless="${sortField == 'skillNum'}" class="bi bi-filter"></i>
                                     </a>
                                 </th>
-                                <th style="width: 120px;">亮点1</th>
-                                <th style="width: 120px;">亮点2</th>
-                                <th style="width: 100px;" class="sortable-header">
+                                <th style="width: 100px;">亮点1</th>
+                                <th style="width: 100px;">亮点2</th>
+                                <th style="width: 90px;" class="sortable-header">
                                     <a th:href="@{/admin/pets(page=1, size=${pageSize}, name=${name}, serverName=${serverName}, sortField='updateTime', sortOrder=${sortField == 'updateTime' && sortOrder == 'asc' ? 'desc' : 'asc'})}" class="sort-link">
                                         更新时间
                                         <i th:if="${sortField == 'updateTime'}" class="bi" th:classappend="${sortOrder == 'asc' ? 'bi-sort-up' : 'bi-sort-down'}"></i>
                                         <i th:unless="${sortField == 'updateTime'}" class="bi bi-filter"></i>
                                     </a>
                                 </th>
-                                <th style="width: 120px;">操作</th>
+                                <th style="width: 100px;">操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="pet : ${pets}">
-                                <td th:text="${pet.id}">1</td>
+                                <td>
+                                    <input type="checkbox" class="pet-checkbox" th:value="${pet.id}" th:data-code="${pet.code}">
+                                </td>
+                                <td style="text-align: center;" th:text="${pet.id}">1</td>
                                 <td th:text="${pet.code}" style="font-family: monospace; font-size: 12px;">-</td>
                                 <td>
                                     <span class="fw-medium" th:text="${pet.name} ?: '-'">-</span>
                                 </td>
-                                <td th:text="${pet.level} ?: '-'">-</td>
+                                <td style="text-align: center;" th:text="${pet.level} ?: '-'">-</td>
                                 <td>
                                     <span th:text="${pet.area} ?: ''" class="text-muted small"></span>
                                     <span th:if="${pet.area != null and pet.serverName != null}" class="text-muted small"> / </span>
                                     <span th:text="${pet.serverName} ?: '-'" class="fw-medium"></span>
                                 </td>
-                                <td>
+                                <td style="text-align: right;">
                                     <span th:if="${pet.price != null}" style="color: #ff4d4f; font-weight: 500;" th:text="'¥' + ${pet.price}">¥0</span>
                                     <span th:if="${pet.price == null}">-</span>
                                 </td>
-                                <td>
-                                    <span class="ant-tag ant-tag-default" th:text="${pet.collect} ?: '0'">0</span>
+                                <td style="text-align: right;">
+                                    <span th:if="${pet.valuationValue != null}" style="color: #1890ff; font-weight: 500;" th:text="'¥' + ${#numbers.formatDecimal(pet.valuationValue, 1, 2)}">¥0</span>
+                                    <span th:if="${pet.valuationValue == null}" class="text-muted">-</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span th:if="${pet.valuationScore != null}" th:class="${pet.valuationScore > 1.2 ? 'ant-tag ant-tag-success' : (pet.valuationScore < 0.8 ? 'ant-tag ant-tag-error' : 'ant-tag ant-tag-warning')}" th:text="${#numbers.formatDecimal(pet.valuationScore, 1, 2)}">1.00</span>
+                                    <span th:if="${pet.valuationScore == null}" class="text-muted">-</span>
                                 </td>
                                 <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 110px; font-size: 12px;" th:text="${pet.txt} ?: '-'" title="${pet.txt}">-</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="ant-tag ant-tag-default" th:text="${pet.collect} ?: '0'">0</span>
+                                </td>
+                                <td style="text-align: center;">
                                     <span class="ant-tag ant-tag-processing" th:text="${pet.skillNum} ?: '0'">0</span>
                                 </td>
                                 <td>
-                                    <span class="text-truncate d-inline-block" style="max-width: 110px; font-size: 12px;" th:text="${pet.lightSpot1} ?: '-'" title="${pet.lightSpot1}">-</span>
+                                    <span class="text-truncate d-inline-block" style="max-width: 90px; font-size: 12px;" th:text="${pet.lightSpot1} ?: '-'" title="${pet.lightSpot1}">-</span>
                                 </td>
                                 <td>
-                                    <span class="text-truncate d-inline-block" style="max-width: 110px; font-size: 12px;" th:text="${pet.lightSpot2} ?: '-'" title="${pet.lightSpot2}">-</span>
+                                    <span class="text-truncate d-inline-block" style="max-width: 90px; font-size: 12px;" th:text="${pet.lightSpot2} ?: '-'" title="${pet.lightSpot2}">-</span>
                                 </td>
-                                <td th:text="${#dates.format(pet.updateTime, 'MM-dd HH:mm')}">01-01 12:00</td>
-                                <td>
-                                    <button class="ant-btn ant-btn-primary ant-btn-sm" th:data-pet-id="${pet.id}" onclick="showDetail(this.getAttribute('data-pet-id'))" title="详情">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="ant-btn ant-btn-sm ms-1" th:data-item-code="${pet.code}" onclick="createReplayTask(this.getAttribute('data-item-code'))" title="重新爬取">
-                                        <i class="bi bi-arrow-clockwise"></i>
-                                    </button>
-                                    <a th:href="${pet.detailUrl}" target="_blank" class="ant-btn ant-btn-sm ms-1" title="查看原页">
-                                        <i class="bi bi-box-arrow-up-right"></i>
-                                    </a>
+                                <td style="text-align: center; white-space: nowrap;" th:text="${#dates.format(pet.updateTime, 'MM-dd HH:mm')}">01-01 12:00</td>
+                                <td style="text-align: center; white-space: nowrap; padding: 4px 2px;">
+                                    <div style="display: inline-flex; gap: 2px; align-items: center;">
+                                        <button class="ant-btn ant-btn-primary ant-btn-sm" th:data-pet-id="${pet.id}" onclick="showDetail(this.getAttribute('data-pet-id'))" title="详情" style="padding: 2px 6px;">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="ant-btn ant-btn-sm" th:data-item-code="${pet.code}" onclick="createReplayTask(this.getAttribute('data-item-code'))" title="重新爬取" style="padding: 2px 6px;">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                        <a th:href="${pet.detailUrl}" target="_blank" class="ant-btn ant-btn-sm" title="查看原页" style="padding: 2px 6px;">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -360,6 +428,66 @@
     </style>
 
     <script th:fragment="scripts">
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.pet-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        }
+
+        // 导出选中的数据
+        function exportSelected() {
+            const checkboxes = document.querySelectorAll('.pet-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('请至少选择一条数据');
+                return;
+            }
+            
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+            const loading = alert('正在导出 ' + ids.length + ' 条数据...');
+            
+            // 使用POST请求导出
+            fetch('/admin/api/pets/export-selected', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('导出失败');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '宠物数据_选中_' + new Date().getTime() + '.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                alert('导出成功');
+            })
+            .catch(error => {
+                alert('导出失败: ' + error.message);
+            });
+        }
+
+        // 导出所有数据
+        function exportAll() {
+            if (!confirm('确定要导出所有 ' + document.querySelector('.text-muted').textContent + ' 数据吗？这可能需要一些时间。')) {
+                return;
+            }
+            
+            alert('正在导出所有数据，请稍候...');
+            
+            // 直接下载
+            window.location.href = '/admin/api/pets/export-all';
+        }
+
         function showDetail(petId) {
             fetch('/admin/api/pet/' + petId)
                 .then(r => r.json())
@@ -409,6 +537,68 @@
                     alert(data.message);
                 })
                 .catch(e => alert('操作失败: ' + e.message));
+        }
+
+        // 重新抓取选中的宠物
+        function rerunSelected() {
+            const checkboxes = document.querySelectorAll('.pet-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('请至少选择一条数据');
+                return;
+            }
+            
+            if (!confirm('确定要重新抓取选中的 ' + checkboxes.length + ' 条数据吗？\n这将为每条数据创建或重置爬虫任务。')) {
+                return;
+            }
+            
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+            
+            fetch('/admin/api/pets/rerun-selected', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    // 刷新页面
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                alert('操作失败: ' + error.message);
+            });
+        }
+
+        // 重新抓取所有宠物
+        function rerunAll() {
+            const totalText = document.querySelector('.text-muted').textContent;
+            if (!confirm('确定要重新抓取所有 ' + totalText + ' 数据吗？\n这将为所有数据创建或重置爬虫任务，可能需要较长时间。')) {
+                return;
+            }
+            
+            alert('正在提交重新抓取任务，请稍候...');
+            
+            fetch('/admin/api/pets/rerun-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    // 刷新页面
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                alert('操作失败: ' + error.message);
+            });
         }
     </script>
 </body>

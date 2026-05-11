@@ -145,6 +145,19 @@
             color: #ff4d4f;
             border: 1px solid #ffccc7;
         }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .table-scroll-container { max-height: none; overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; }
+            .page-header { flex-direction: column !important; gap: 12px; }
+            .scheduler-control { width: 100%; justify-content: center; flex-wrap: wrap; }
+            .pagination-wrapper { flex-direction: column; gap: 10px; padding: 12px !important; text-align: center; }
+            .ant-card .card-header > div { margin-top: 8px; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            #createTaskForm [class*="col-md"], form.row [class*="col-md"] { width: 100% !important; flex: 0 0 100% !important; max-width: 100% !important; }
+        }
     </style>
 </head>
 <body>

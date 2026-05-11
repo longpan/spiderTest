@@ -2,6 +2,9 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(title='认证配置', active='auth')}">
 <head>
     <title>认证配置</title>
+    <style>
+        @media (max-width: 768px) { .ant-card .card-header { flex-direction: column; gap: 8px; text-align: center; } }
+    </style>
 </head>
 <body>
     <div th:fragment="content">

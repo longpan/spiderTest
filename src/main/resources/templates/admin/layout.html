@@ -400,11 +400,108 @@
             margin-bottom: 16px;
             color: #d9d9d9;
         }
+
+        /* ===== 响应式布局 ===== */
+
+        /* 移动端汉堡菜单按钮 */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #333;
+            cursor: pointer;
+            padding: 4px 8px;
+            margin-right: 12px;
+        }
+
+        /* 移动端遮罩层 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 998;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* 平板端 (<=1024px) */
+        @media (max-width: 1024px) {
+            :root { --sidebar-width: 180px; }
+            .stat-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .stat-icon { width: 40px; height: 40px; font-size: 20px; margin-right: 12px; }
+            .stat-card .stat-value { font-size: 22px; }
+            .ant-table th, .ant-table td { padding: 8px 10px; font-size: 13px; }
+            .main-wrapper { padding: 16px; }
+            .page-header h4 { font-size: 18px; }
+            .top-header .nav-right span { display: none; }
+        }
+
+        /* 手机端 (<=768px) */
+        @media (max-width: 768px) {
+            :root { --sidebar-width: 260px; --header-height: 52px; }
+
+            .mobile-menu-toggle { display: block; }
+            .top-header { padding: 0 12px; }
+            .top-header .brand { font-size: 15px; }
+            .top-header .brand i { font-size: 20px; }
+            .top-header .nav-right { gap: 8px; }
+            .top-header .nav-right a { font-size: 12px; gap: 2px; }
+            .top-header .nav-right span { display: none !important; }
+
+            /* 侧边栏变为覆盖层抽屉 */
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: 2px 0 8px rgba(0,0,0,0.15); }
+            .sidebar.mobile-open { transform: translateX(0); }
+
+            .main-wrapper { margin-left: 0; padding: 12px; min-height: calc(100vh - var(--header-height)); }
+            .page-header h4 { font-size: 16px; }
+            .page-header { margin-bottom: 16px; }
+            .ant-card { margin-bottom: 16px; border-radius: 6px; }
+
+            /* 统计卡片：双列 */
+            .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+            .stat-card { padding: 12px; flex-direction: column; text-align: center; }
+            .stat-card .stat-icon { margin-right: 0; margin-bottom: 8px; width: 36px; height: 36px; font-size: 18px; }
+            .stat-card .stat-value { font-size: 20px; }
+            .stat-card .stat-label { font-size: 12px; margin-top: 2px; }
+
+            /* 表格横向滚动 */
+            .table-responsive-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -12px; padding: 0 12px; }
+            .ant-table { min-width: 700px; }
+            .ant-table th, .ant-table td { padding: 8px 10px; white-space: nowrap; font-size: 12px; }
+            .ant-table th { font-size: 13px; }
+
+            .ant-card .card-header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+            .ant-card .card-body { padding: 16px; }
+            .ant-btn { padding: 5px 10px; font-size: 13px; }
+            .ant-btn-sm { padding: 3px 8px; font-size: 12px; }
+            .ant-pagination { justify-content: center; flex-wrap: wrap; gap: 4px; }
+            .ant-pagination a { padding: 5px 9px; font-size: 13px; }
+            .ant-tag { font-size: 11px; padding: 1px 5px; }
+            .ant-input { font-size: 13px; padding: 6px 10px; }
+            .ant-empty { padding: 32px 0; }
+            .ant-empty i { font-size: 36px; }
+        }
+
+        /* 超小屏 (<=480px) */
+        @media (max-width: 480px) {
+            :root { --header-height: 48px; }
+            .top-header .brand { font-size: 13px; }
+            .main-wrapper { padding: 8px; }
+            .stat-card .stat-value { font-size: 18px; }
+            .ant-table th, .ant-table td { padding: 6px 8px; font-size: 11px; }
+            .ant-card .card-body { padding: 12px; }
+            .ant-card .card-header { padding: 10px 12px; }
+        }
     </style>
 </head>
 <body>
     <!-- 顶部导航 -->
     <header class="top-header">
+        <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
         <div class="brand">
             <i class="bi bi-hexagon-fill"></i>
             <span>藏宝阁爬虫管理系统</span>
@@ -422,6 +519,7 @@
     </header>
 
     <!-- 侧边栏 -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
     <aside class="sidebar">
         <nav class="sidebar-menu">
             <a class="menu-item" th:classappend="${active == 'dashboard'} ? 'active'" href="/admin/dashboard">
@@ -440,6 +538,10 @@
                 <i class="bi bi-key"></i>
                 <span>认证配置</span>
             </a>
+            <a class="menu-item" th:classappend="${active == 'logs'} ? 'active'" href="/admin/logs">
+                <i class="bi bi-terminal"></i>
+                <span>日志管理</span>
+            </a>
         </nav>
     </aside>
 
@@ -454,6 +556,13 @@
     <script>
         function refreshPage() {
             location.reload();
+        }
+
+        function toggleMobileSidebar() {
+            var sidebar = document.querySelector('.sidebar');
+            var overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
         }
     </script>
     

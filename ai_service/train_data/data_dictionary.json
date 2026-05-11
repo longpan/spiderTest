@@ -1,0 +1,23 @@
+{
+  "description": "梦幻西游藏宝阁宠物真实训练数据",
+  "source": "mh_pet_item 数据库表",
+  "extraction_time": "2026-04-28 16:29:06",
+  "record_count": 8986,
+  "fields": {
+    "level": "等级",
+    "skillNum": "技能数量",
+    "attackQualification": "攻击资质",
+    "defenseQualification": "防御资质",
+    "physicalQualification": "体力资质",
+    "manaQualification": "法力资质",
+    "speedQualification": "速度资质",
+    "growUp": "成长值",
+    "collect": "收藏人数",
+    "price": "价格（目标变量）",
+    "rareSkillCount": "稀有技能数量（衍生特征）",
+    "qualPercent": "综合资质百分比（衍生特征）",
+    "skillScore": "技能价值评分（衍生特征）",
+    "growLevelScore": "成长等级评分（衍生特征）",
+    "isBaby": "是否宝宝（1=是，0=否）"
+  }
+}

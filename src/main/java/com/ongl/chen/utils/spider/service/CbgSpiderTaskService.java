@@ -120,4 +120,9 @@ public interface CbgSpiderTaskService {
      * 批量重新运行任务
      */
     int batchReRunTasks(List<Long> taskIds);
+
+    /**
+     * 根据URL重新运行任务
+     */
+    boolean reRunTaskByUrl(String url);
 }

@@ -321,4 +321,40 @@ public class CbgSpiderTaskServiceImpl implements CbgSpiderTaskService {
         }
         return count;
     }
+
+    @Override
+    public boolean reRunTaskByUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return false;
+        }
+        
+        // 根据URL查找任务
+        CbgSpiderTask task = cbgSpiderTaskDAO.getTaskByUrl(url);
+        if (task == null) {
+            // 如果没有找到任务，创建一个新的详情页任务
+            CbgSpiderTask newTask = new CbgSpiderTask();
+            newTask.setTaskType("DETAIL_PAGE");
+            newTask.setUrl(url);
+            newTask.setStatus("PENDING");
+            newTask.setRetryCount(0);
+            newTask.setCreateTime(new Date());
+            newTask.setUpdateTime(new Date());
+            cbgSpiderTaskDAO.insert(newTask);
+            return true;
+        }
+        
+        // 如果任务正在运行中，不能重新运行
+        if ("RUNNING".equals(task.getStatus())) {
+            return false;
+        }
+        
+        // 重置任务状态为PENDING
+        task.setStatus("PENDING");
+        task.setRetryCount(0);
+        task.setResult(null);
+        task.setEndTime(null);
+        task.setUpdateTime(new Date());
+        cbgSpiderTaskDAO.updateById(task);
+        return true;
+    }
 }
